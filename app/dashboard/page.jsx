@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -19,6 +20,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [downloadType, setDownloadType] = useState("monthly"); // 'monthly', 'dateRange', 'all'
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginMessage, setLoginMessage] = useState({ type: "", text: "" });
+  const [loginCredentials, setLoginCredentials] = useState({
+    userId: "",
+    password: "",
+  });
 
   const [filters, setFilters] = useState({
     mmu_name: "",
@@ -40,12 +47,31 @@ export default function Dashboard() {
     fetchMmuData();
   }, []);
 
+  useEffect(() => {
+    const storedAuth =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("dashboardAuth")
+        : null;
+    if (storedAuth === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDownload = async () => {
+    if (!isLoggedIn) {
+      setMessage({
+        type: "error",
+        text: "Please login first to download reports.",
+      });
+      return;
+    }
+
     setLoading(true);
     setMessage({ type: "", text: "" });
 
@@ -122,6 +148,43 @@ export default function Dashboard() {
     }
   };
 
+  const VALID_USER_ID = "gloitel";
+  const VALID_PASSWORD = "gloitel";
+
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginCredentials((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setLoginMessage({ type: "", text: "" });
+
+    const { userId, password } = loginCredentials;
+    if (userId === VALID_USER_ID && password === VALID_PASSWORD) {
+      window.localStorage.setItem("dashboardAuth", "true");
+      setIsLoggedIn(true);
+      setLoginMessage({
+        type: "success",
+        text: "Login successful. You can now download reports.",
+      });
+      return;
+    }
+
+    setLoginMessage({
+      type: "error",
+      text: "Invalid credentials. Please use the correct user ID and password.",
+    });
+  };
+
+  const handleLogout = () => {
+    window.localStorage.removeItem("dashboardAuth");
+    setIsLoggedIn(false);
+    setLoginCredentials({ userId: "", password: "" });
+    setMessage({ type: "", text: "" });
+    setLoginMessage({ type: "", text: "" });
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 p-4 sm:p-8">
       <motion.div
@@ -133,128 +196,212 @@ export default function Dashboard() {
           Dashboard Reports
         </h1>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
-          <h2 className="mb-4 text-xl font-semibold text-slate-800">
-            Download Audit Reports
-          </h2>
+        {!isLoggedIn ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-xl font-semibold text-slate-800">
+              Login to Access Downloads
+            </h2>
 
-          {message.text && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mb-6 flex items-center gap-3 rounded-xl p-4 ${
-                message.type === "success"
-                  ? "border border-green-200 bg-green-50 text-green-700"
-                  : "border border-red-200 bg-red-50 text-red-700"
-              }`}
+            {loginMessage.text && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-6 flex items-center gap-3 rounded-xl p-4 ${
+                  loginMessage.type === "success"
+                    ? "border border-green-200 bg-green-50 text-green-700"
+                    : "border border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
+                {loginMessage.type === "success" ? (
+                  <CheckCircle size={20} className="shrink-0" />
+                ) : (
+                  <AlertCircle size={20} className="shrink-0" />
+                )}
+                <span className="font-medium">{loginMessage.text}</span>
+              </motion.div>
+            )}
+
+            <form
+              onSubmit={handleLogin}
+              autoComplete="off"
+              className="grid gap-6"
             >
-              {message.type === "success" ? (
-                <CheckCircle size={20} className="shrink-0" />
-              ) : (
-                <AlertCircle size={20} className="shrink-0" />
-              )}
-              <span className="font-medium">{message.text}</span>
-            </motion.div>
-          )}
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                MMU Name (Optional)
-              </label>
-              <select
-                name="mmu_name"
-                value={filters.mmu_name}
-                onChange={handleFilterChange}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-              >
-                <option value="">All MMUs</option>
-                {mmuDetails.map((mmu) => (
-                  <option key={mmu.mmu_name} value={mmu.mmu_name}>
-                    {mmu.mmu_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Download Type
-              </label>
-              <select
-                value={downloadType}
-                onChange={(e) => setDownloadType(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-              >
-                <option value="monthly">Month Wise</option>
-                <option value="dateRange">Date Range</option>
-                <option value="all">All Data</option>
-              </select>
-            </div>
-
-            {downloadType === "monthly" && (
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Select Month
+                  User ID
                 </label>
                 <input
-                  type="month"
-                  name="month"
-                  value={filters.month}
-                  onChange={handleFilterChange}
+                  type="text"
+                  name="userId"
+                  autoComplete="off"
+                  value={loginCredentials.userId}
+                  onChange={handleLoginChange}
+                  placeholder="Enter user ID"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
                 />
               </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  autoComplete="new-password"
+                  value={loginCredentials.password}
+                  onChange={handleLoginChange}
+                  placeholder="Enter password"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="rounded-xl bg-slate-900 px-8 py-3 text-white shadow-lg transition hover:bg-slate-800"
+              >
+                Login
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Download Audit Reports
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Use the filters below and click Download Excel.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                Logout
+              </button>
+            </div>
+
+            {message.text && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-6 flex items-center gap-3 rounded-xl p-4 ${
+                  message.type === "success"
+                    ? "border border-green-200 bg-green-50 text-green-700"
+                    : "border border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
+                {message.type === "success" ? (
+                  <CheckCircle size={20} className="shrink-0" />
+                ) : (
+                  <AlertCircle size={20} className="shrink-0" />
+                )}
+                <span className="font-medium">{message.text}</span>
+              </motion.div>
             )}
 
-            {downloadType === "dateRange" && (
-              <>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  MMU Name (Optional)
+                </label>
+                <select
+                  name="mmu_name"
+                  value={filters.mmu_name}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                >
+                  <option value="">All MMUs</option>
+                  {mmuDetails.map((mmu) => (
+                    <option key={mmu.mmu_name} value={mmu.mmu_name}>
+                      {mmu.mmu_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Download Type
+                </label>
+                <select
+                  value={downloadType}
+                  onChange={(e) => setDownloadType(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                >
+                  <option value="monthly">Month Wise</option>
+                  <option value="dateRange">Date Range</option>
+                  <option value="all">All Data</option>
+                </select>
+              </div>
+
+              {downloadType === "monthly" && (
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Start Date
+                    Select Month
                   </label>
                   <input
-                    type="date"
-                    name="startDate"
-                    value={filters.startDate}
+                    type="month"
+                    name="month"
+                    value={filters.month}
                     onChange={handleFilterChange}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
                   />
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={filters.endDate}
-                    onChange={handleFilterChange}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-                  />
-                </div>
-              </>
-            )}
-          </div>
+              )}
 
-          <div className="mt-8 flex justify-end">
-            <button
-              onClick={handleDownload}
-              disabled={loading}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 sm:w-auto ${
-                loading
-                  ? "cursor-not-allowed bg-green-500"
-                  : "bg-green-600 hover:bg-green-700 hover:shadow-xl"
-              }`}
-            >
-              <FileSpreadsheet
-                size={18}
-                className={loading ? "animate-pulse" : ""}
-              />
-              {loading ? "Downloading..." : "Download Excel"}
-            </button>
+              {downloadType === "dateRange" && (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={filters.startDate}
+                      onChange={handleFilterChange}
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={filters.endDate}
+                      onChange={handleFilterChange}
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={handleDownload}
+                disabled={loading}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 sm:w-auto ${
+                  loading
+                    ? "cursor-not-allowed bg-green-500"
+                    : "bg-green-600 hover:bg-green-700 hover:shadow-xl"
+                }`}
+              >
+                <FileSpreadsheet
+                  size={18}
+                  className={loading ? "animate-pulse" : ""}
+                />
+                {loading ? "Downloading..." : "Download Excel"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
     </div>
   );

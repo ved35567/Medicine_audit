@@ -38,6 +38,15 @@ export default function MedicineAudit() {
     phase: "",
   });
 
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -50,27 +59,19 @@ export default function MedicineAudit() {
         const mmuData = await response[1].json();
         const statsData = await response[2].json();
 
-        // Check for saved draft before setting state
-        const draftString = localStorage.getItem("medicine_audit_draft");
-        let draftFormData = null;
-        if (draftString) {
-          try {
-            const draft = JSON.parse(draftString);
-            if (draft && draft.formData) {
-              draftFormData = draft.formData;
-            }
-          } catch (e) {
-            console.error("Error loading draft", e);
-          }
-        }
-
         setMedicines(Array.isArray(medicinesData) ? medicinesData : []);
         setMmuDetails(Array.isArray(mmuData) ? mmuData : []);
         if (statsData && statsData.success) {
           setStatistics(statsData);
         }
-        if (draftFormData) {
-          setFormData(draftFormData);
+
+        // Initialize quantities for medicines
+        if (Array.isArray(medicinesData) && medicinesData.length > 0) {
+          const init = {};
+          medicinesData.forEach((_, i) => {
+            init[i] = "";
+          });
+          setQuantities(init);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -88,13 +89,29 @@ export default function MedicineAudit() {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "mmu_name") {
+    // Validate date - only allow today's date
+    if (name === "audit_date") {
+      const todayDate = getTodayDate();
+      if (value !== "" && value !== todayDate) {
+        setMessage({
+          type: "error",
+          text: "You can only select today's date for the audit.",
+        });
+        return;
+      }
+      setMessage({ type: "", text: "" });
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    } else if (name === "mmu_name") {
       const selectedMmuData = mmuDetails.find((mmu) => mmu.mmu_name === value);
       setFormData((prev) => ({
         ...prev,
         [name]: value,
         vendor_name: selectedMmuData?.mmu_vendor_name || "",
         phase: selectedMmuData?.phase || "",
+        vehicle_reg_number: selectedMmuData?.vehicle_reg_number || "",
       }));
     } else {
       setFormData((prev) => ({
@@ -104,48 +121,13 @@ export default function MedicineAudit() {
     }
   };
   const handleQuantityChange = (index, value) => {
+    // Only allow numeric input (0-9)
+    const numericValue = value.replace(/[^0-9]/g, "");
     setQuantities((prev) => ({
       ...prev,
-      [index]: value === "" ? "" : parseInt(value, 10),
+      [index]: numericValue === "" ? "" : parseInt(numericValue, 10),
     }));
   };
-
-  // Initialize quantities to empty strings for all medicines when medicines list loads to avoid auto-filling with 0
-  useEffect(() => {
-    if (Array.isArray(medicines) && medicines.length > 0) {
-      // Load drafted quantities if available
-      const draftString = localStorage.getItem("medicine_audit_draft");
-      let draftQuantities = null;
-      if (draftString) {
-        try {
-          const draft = JSON.parse(draftString);
-          if (draft && draft.quantities) {
-            draftQuantities = draft.quantities;
-          }
-        } catch (e) {
-          console.error("Error loading draft quantities", e);
-        }
-      }
-
-      const init = {};
-      medicines.forEach((_, i) => {
-        init[i] =
-          draftQuantities && draftQuantities[i] !== undefined
-            ? draftQuantities[i]
-            : "";
-      });
-      setQuantities(init);
-    }
-  }, [medicines]);
-
-  // Auto-save form data and quantities whenever they change
-  useEffect(() => {
-    // Only save if we have finished fetching data, so we don't overwrite with empty initial states
-    if (!isFetching) {
-      const draft = { formData, quantities };
-      localStorage.setItem("medicine_audit_draft", JSON.stringify(draft));
-    }
-  }, [formData, quantities, isFetching]);
 
   const filteredMedicines = medicines
     .map((medicine, index) => ({ medicine, index }))
@@ -237,6 +219,16 @@ export default function MedicineAudit() {
         return;
       }
 
+      // Validate that audit date is today only
+      if (formData.audit_date !== getTodayDate()) {
+        setMessage({
+          type: "error",
+          text: "Audit date must be today's date. You cannot submit audits for past or future dates.",
+        });
+        setLoading(false);
+        return;
+      }
+
       const submitData = {
         ...formData,
         medicines: medicinesData,
@@ -257,9 +249,6 @@ export default function MedicineAudit() {
           type: "success",
           text: "Audit data submitted successfully!",
         });
-
-        // Clear draft from local storage after successful submission
-        localStorage.removeItem("medicine_audit_draft");
 
         // Reset form
         setFormData({
@@ -336,7 +325,7 @@ export default function MedicineAudit() {
             <Activity size={24} />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">Today's Audits</p>
+            <p className="text-sm font-medium text-slate-500">Todays Audits</p>
             <p className="text-2xl font-bold text-slate-800">
               {statistics.daily.auditCount}
             </p>
@@ -421,6 +410,8 @@ export default function MedicineAudit() {
                   name="audit_date"
                   value={formData.audit_date}
                   onChange={handleFormChange}
+                  min={getTodayDate()}
+                  max={getTodayDate()}
                   required
                   className="w-full rounded-xl border border-slate-300 py-3 pl-11 pr-4 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
                 />
@@ -467,10 +458,10 @@ export default function MedicineAudit() {
                   id="vehicle_reg_number"
                   name="vehicle_reg_number"
                   value={formData.vehicle_reg_number}
-                  onChange={handleFormChange}
-                  placeholder="CG04 XXXX"
+                  readOnly
+                  placeholder="Select MMU to auto-fill"
                   required
-                  className="w-full rounded-xl border border-slate-300 py-3 pl-11 pr-4 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-100 py-3 pl-11 pr-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
                 />
               </div>
             </div>
@@ -593,7 +584,7 @@ export default function MedicineAudit() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-                    Medicine Inventory
+                    Medicine Stock
                   </h2>
                   <p className="mt-0.5 text-sm text-slate-500">
                     Carefully verify and enter the physical quantities.
@@ -669,6 +660,10 @@ export default function MedicineAudit() {
                             onChange={(e) =>
                               handleQuantityChange(index, e.target.value)
                             }
+                            onInput={(e) => {
+                              // Block non-numeric input
+                              e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                            }}
                             onKeyDown={(e) =>
                               handleQuantityKeyDown(e, index, "mob")
                             }
@@ -726,6 +721,10 @@ export default function MedicineAudit() {
                               onChange={(e) =>
                                 handleQuantityChange(index, e.target.value)
                               }
+                              onInput={(e) => {
+                                // Block non-numeric input
+                                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                              }}
                               onKeyDown={(e) =>
                                 handleQuantityKeyDown(e, index, "desk")
                               }
@@ -754,12 +753,7 @@ export default function MedicineAudit() {
             >
               {loading ? "Submitting..." : "Submit Audit"}
             </button>
-            {!loading && !isFetching && (
-              <span className="flex items-center justify-center gap-1.5 text-sm font-medium text-slate-500 sm:justify-start">
-                <CheckCircle size={16} className="text-emerald-500" />
-                Draft auto-saved locally
-              </span>
-            )}
+           
           </div>
         </form>
       </motion.div>
