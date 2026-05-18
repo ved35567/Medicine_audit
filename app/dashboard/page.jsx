@@ -148,33 +148,39 @@ export default function Dashboard() {
     }
   };
 
-  const VALID_USER_ID = "gloitel";
-  const VALID_PASSWORD = "gloitel";
-
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginCredentials((prev) => ({ ...prev, [name]: value }));
   };
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMessage({ type: "", text: "" });
 
-    const { userId, password } = loginCredentials;
-    if (userId === VALID_USER_ID && password === VALID_PASSWORD) {
-      window.localStorage.setItem("dashboardAuth", "true");
-      setIsLoggedIn(true);
-      setLoginMessage({
-        type: "success",
-        text: "Login successful. You can now download reports.",
+    try {
+      const res = await fetch("/api/auth/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginCredentials),
       });
-      return;
-    }
+      const data = await res.json();
 
-    setLoginMessage({
-      type: "error",
-      text: "Invalid credentials. Please use the correct user ID and password.",
-    });
+      if (data && data.success) {
+        window.localStorage.setItem("dashboardAuth", "true");
+        setIsLoggedIn(true);
+        setLoginMessage({
+          type: "success",
+          text: "Login successful. You can now download reports.",
+        });
+      } else {
+        setLoginMessage({
+          type: "error",
+          text: "Invalid credentials. Please use the correct user ID and password.",
+        });
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setLoginMessage({ type: "error", text: "Login failed. Try again later." });
+    }
   };
 
   const handleLogout = () => {
