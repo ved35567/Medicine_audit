@@ -2,8 +2,19 @@ import MedicineAudit from "@/models/MedicineAudit";
 import mongoose from "mongoose";
 import ExcelJS from "exceljs";
 
+const authCookieName = "dashboardAuth";
+
+const validateAuth = (request) =>
+  request.cookies.get(authCookieName)?.value === "true";
+
 export async function GET(request) {
   try {
+    if (!validateAuth(request)) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     const { searchParams } = new URL(request.url);
     const mmu_name = searchParams.get("mmu_name");
     const startDateStr = searchParams.get("startDate");

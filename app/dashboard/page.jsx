@@ -48,14 +48,22 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const storedAuth =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("dashboardAuth")
-        : null;
-    if (storedAuth === "true") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoggedIn(true);
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/validate", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (data?.success) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error("Auth validation error:", error);
+      }
     }
+
+    checkAuth();
   }, []);
 
   const handleFilterChange = (e) => {
@@ -108,7 +116,9 @@ export default function Dashboard() {
         endpoint = `/api/audit/download${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
       }
 
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         let errorMessage = `Server error: ${response.status} ${response.statusText}`;
@@ -159,13 +169,13 @@ export default function Dashboard() {
     try {
       const res = await fetch("/api/auth/validate", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginCredentials),
       });
       const data = await res.json();
 
       if (data && data.success) {
-        window.localStorage.setItem("dashboardAuth", "true");
         setIsLoggedIn(true);
         setLoginMessage({
           type: "success",
@@ -183,12 +193,20 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    window.localStorage.removeItem("dashboardAuth");
-    setIsLoggedIn(false);
-    setLoginCredentials({ userId: "", password: "" });
-    setMessage({ type: "", text: "" });
-    setLoginMessage({ type: "", text: "" });
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggedIn(false);
+      setLoginCredentials({ userId: "", password: "" });
+      setMessage({ type: "", text: "" });
+      setLoginMessage({ type: "", text: "" });
+    }
   };
 
   return (
