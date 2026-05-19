@@ -20,6 +20,8 @@ export default function MedicineAudit() {
   const [isFetching, setIsFetching] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [invalidFields, setInvalidFields] = useState({});
+  const [invalidQuantityIndex, setInvalidQuantityIndex] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [quantities, setQuantities] = useState({});
   const [statistics, setStatistics] = useState({
@@ -86,8 +88,49 @@ export default function MedicineAudit() {
     fetchData();
   }, []);
 
+  const focusField = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.focus();
+      element.select?.();
+    }
+  };
+
+  const clearInvalidField = (name) => {
+    setInvalidFields((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
+
+  const getFieldBorderClass = (fieldName) =>
+    invalidFields[fieldName]
+      ? "border-red-500 ring-2 ring-red-200 focus:border-red-700 focus:ring-red-200"
+      : "border-slate-300 focus:ring-slate-700";
+
+  const getQuantityInputClasses = (index) =>
+    invalidQuantityIndex === index
+      ? "mx-auto block w-32 rounded-xl border-2 border-red-500 px-3 py-2.5 text-center text-lg font-bold text-slate-800 outline-none transition-all hover:border-red-500 focus:border-red-700 focus:ring-4 focus:ring-red-200"
+      : "mx-auto block w-32 rounded-xl border-2 border-slate-200 px-3 py-2.5 text-center text-lg font-bold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10";
+
+  const focusFirstInvalidQuantity = (index) => {
+    const deskInput = document.getElementById(`qty-desk-${index}`);
+    const mobileInput = document.getElementById(`qty-mob-${index}`);
+    const target =
+      window.innerWidth >= 768 ? deskInput || mobileInput : mobileInput || deskInput;
+    if (target) {
+      target.focus();
+      target.select?.();
+    }
+  };
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
+
+    clearInvalidField(name);
+    setInvalidQuantityIndex(null);
 
     // Validate date - only allow today's date
     if (name === "audit_date") {
@@ -106,6 +149,13 @@ export default function MedicineAudit() {
       }));
     } else if (name === "mmu_name") {
       const selectedMmuData = mmuDetails.find((mmu) => mmu.mmu_name === value);
+      setInvalidFields((prev) => {
+        const next = { ...prev };
+        delete next.vendor_name;
+        delete next.phase;
+        delete next.vehicle_reg_number;
+        return next;
+      });
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -191,6 +241,11 @@ export default function MedicineAudit() {
       );
 
       if (hasEmptyQuantity) {
+        const invalidIndex = medicines.findIndex(
+          (_, index) => quantities[index] === "" || quantities[index] === undefined,
+        );
+        setInvalidQuantityIndex(invalidIndex);
+        focusFirstInvalidQuantity(invalidIndex);
         setMessage({
           type: "error",
           text: "Please make sure to enter a quantity for every medicine. You can enter 0 if a medicine is out of stock.",
@@ -200,17 +255,27 @@ export default function MedicineAudit() {
       }
 
       // Validate all required fields
-      if (
-        !formData.audit_date ||
-        !formData.mmu_name ||
-        !formData.vehicle_reg_number ||
-        !formData.apm_name ||
-        !formData.nodal_officer_name ||
-        !formData.mmu_doctor_name ||
-        !formData.mmu_pharmacist_name ||
-        !formData.vendor_name ||
-        !formData.phase
-      ) {
+      const requiredFields = [
+        "audit_date",
+        "mmu_name",
+        "vehicle_reg_number",
+        "apm_name",
+        "nodal_officer_name",
+        "mmu_doctor_name",
+        "mmu_pharmacist_name",
+        "vendor_name",
+        "phase",
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => !formData[field],
+      );
+      if (missingFields.length > 0) {
+        const firstMissing = missingFields[0];
+        const invalids = Object.fromEntries(
+          missingFields.map((field) => [field, true]),
+        );
+        setInvalidFields(invalids);
+        focusField(firstMissing);
         setMessage({
           type: "error",
           text: "Please double-check the form and fill in all the required details before submitting.",
@@ -262,6 +327,8 @@ export default function MedicineAudit() {
           vendor_name: "",
           phase: "",
         });
+        setInvalidFields({});
+        setInvalidQuantityIndex(null);
         const resetQuantities = {};
         medicines.forEach((_, i) => {
           resetQuantities[i] = "";
@@ -413,7 +480,7 @@ export default function MedicineAudit() {
                   min={getTodayDate()}
                   max={getTodayDate()}
                   required
-                  className="w-full rounded-xl border border-slate-300 py-3 pl-11 pr-4 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                  className={`w-full rounded-xl border ${getFieldBorderClass("audit_date")} py-3 pl-11 pr-4 outline-none sm:rounded-2xl`}
                 />
               </div>
             </div>
@@ -430,7 +497,7 @@ export default function MedicineAudit() {
                 value={formData.mmu_name}
                 onChange={handleFormChange}
                 required
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("mmu_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               >
                 <option value="">Select MMU</option>
                 {mmuDetails.map((mmu) => (
@@ -461,7 +528,7 @@ export default function MedicineAudit() {
                   readOnly
                   placeholder="Select MMU to auto-fill"
                   required
-                  className="w-full rounded-xl border border-slate-300 bg-slate-100 py-3 pl-11 pr-4 text-slate-700 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                  className={`w-full rounded-xl border ${getFieldBorderClass("vehicle_reg_number")} bg-slate-100 py-3 pl-11 pr-4 text-slate-700 outline-none sm:rounded-2xl`}
                 />
               </div>
             </div>
@@ -480,7 +547,7 @@ export default function MedicineAudit() {
                 onChange={handleFormChange}
                 placeholder="Enter APM name"
                 required
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("apm_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
             </div>
 
@@ -498,7 +565,7 @@ export default function MedicineAudit() {
                 onChange={handleFormChange}
                 placeholder="Enter officer name"
                 required
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("nodal_officer_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
             </div>
 
@@ -516,7 +583,7 @@ export default function MedicineAudit() {
                 onChange={handleFormChange}
                 placeholder="Doctor name"
                 required
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("mmu_doctor_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
             </div>
 
@@ -534,7 +601,7 @@ export default function MedicineAudit() {
                 onChange={handleFormChange}
                 placeholder="Pharmacist name"
                 required
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700 sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("mmu_pharmacist_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
             </div>
 
@@ -552,7 +619,7 @@ export default function MedicineAudit() {
                 placeholder="Vendor name"
                 required
                 readOnly
-                className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("vendor_name")} bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl`}
               />
             </div>
 
@@ -570,7 +637,7 @@ export default function MedicineAudit() {
                 placeholder="Phase name"
                 required
                 readOnly
-                className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl"
+                className={`w-full rounded-xl border ${getFieldBorderClass("phase")} bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl`}
               />
             </div>
           </div>
@@ -667,7 +734,7 @@ export default function MedicineAudit() {
                             onKeyDown={(e) =>
                               handleQuantityKeyDown(e, index, "mob")
                             }
-                            className="w-28 rounded-xl border-2 border-slate-200 px-3 py-2.5 text-center text-lg font-bold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10"
+                            className={getQuantityInputClasses(index)}
                           />
                         </div>
                       </div>
@@ -728,7 +795,7 @@ export default function MedicineAudit() {
                               onKeyDown={(e) =>
                                 handleQuantityKeyDown(e, index, "desk")
                               }
-                              className="mx-auto block w-32 rounded-xl border-2 border-slate-200 px-3 py-2.5 text-center text-lg font-bold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10"
+                              className={getQuantityInputClasses(index)}
                             />
                           </td>
                         </tr>
