@@ -6,9 +6,6 @@ import {
   Truck,
   AlertCircle,
   CheckCircle,
-  TrendingUp,
-  Activity,
-  Calendar,
   Search,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -24,10 +21,6 @@ export default function MedicineAudit() {
   const [invalidQuantityIndex, setInvalidQuantityIndex] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [quantities, setQuantities] = useState({});
-  const [statistics, setStatistics] = useState({
-    daily: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
-    monthly: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
-  });
   const [formData, setFormData] = useState({
     audit_date: "",
     mmu_name: "",
@@ -55,17 +48,12 @@ export default function MedicineAudit() {
         const response = await Promise.all([
           fetch("/api/medicines"),
           fetch("/api/mmu_details"),
-          fetch("/api/audit/statistics"),
         ]);
         const medicinesData = await response[0].json();
         const mmuData = await response[1].json();
-        const statsData = await response[2].json();
 
         setMedicines(Array.isArray(medicinesData) ? medicinesData : []);
         setMmuDetails(Array.isArray(mmuData) ? mmuData : []);
-        if (statsData && statsData.success) {
-          setStatistics(statsData);
-        }
 
         // Initialize quantities for medicines
         if (Array.isArray(medicinesData) && medicinesData.length > 0) {
@@ -379,49 +367,6 @@ export default function MedicineAudit() {
         <p className="mt-2 text-sm text-slate-500 sm:text-base">
           Mobile Medical Unit Medicine Physical Audit
         </p>
-      </motion.div>
-
-      {/* Statistics Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-auto mb-6 grid w-full max-w-7xl grid-cols-1 gap-4 sm:mb-8 md:grid-cols-3"
-      >
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
-            <Activity size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">Todays Audits</p>
-            <p className="text-2xl font-bold text-slate-800">
-              {statistics.daily.auditCount}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="rounded-xl bg-green-50 p-3 text-green-600">
-            <TrendingUp size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">Monthly Audits</p>
-            <p className="text-2xl font-bold text-slate-800">
-              {statistics.monthly.auditCount}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
-            <Calendar size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">
-              MMUs Audited (Month)
-            </p>
-            <p className="text-2xl font-bold text-slate-800">
-              {statistics.monthly.mmuAudited}
-            </p>
-          </div>
-        </div>
       </motion.div>
 
       <motion.div

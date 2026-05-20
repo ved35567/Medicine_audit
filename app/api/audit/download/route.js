@@ -1,6 +1,7 @@
 import MedicineAudit from "@/models/MedicineAudit";
 import mongoose from "mongoose";
 import ExcelJS from "exceljs";
+import { formatToIST, formatDateOnly } from "@/lib/dateUtils";
 
 const authCookieName = "dashboardAuth";
 
@@ -78,8 +79,8 @@ export async function GET(request) {
     // Add data rows
     let rowIndex = 2;
     audits.forEach((audit, auditIndex) => {
-      const auditDate = new Date(audit.audit_date).toLocaleDateString("en-IN");
-      const submittedDate = new Date(audit.createdAt).toLocaleString("en-IN");
+      const auditDate = formatDateOnly(audit.audit_date);
+      const submittedDate = formatToIST(audit.createdAt);
 
       if (audit.medicines && audit.medicines.length > 0) {
         audit.medicines.forEach((medicine) => {

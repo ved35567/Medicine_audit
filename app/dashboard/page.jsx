@@ -12,6 +12,8 @@ import {
   Calendar,
   ChevronDown,
   Sparkles,
+  Activity,
+  TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -32,6 +34,11 @@ export default function Dashboard() {
     month: new Date().toISOString().split("T")[0].slice(0, 7),
     startDate: "",
     endDate: "",
+  });
+
+  const [statistics, setStatistics] = useState({
+    daily: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
+    monthly: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
   });
 
   useEffect(() => {
@@ -64,6 +71,26 @@ export default function Dashboard() {
     }
 
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    async function fetchStatistics() {
+      try {
+        const response = await fetch("/api/audit/statistics");
+        const statsData = await response.json();
+
+        if (statsData && statsData.success) {
+          setStatistics(statsData);
+        }
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      }
+    }
+
+    fetchStatistics();
+    // Refresh statistics every 30 seconds
+    const interval = setInterval(fetchStatistics, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleFilterChange = (e) => {
@@ -219,6 +246,50 @@ export default function Dashboard() {
         <h1 className="mb-6 text-2xl font-bold text-slate-800">
           Dashboard Reports
         </h1>
+
+        {/* Statistics Section - Visible to Everyone */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8 grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3"
+        >
+          <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
+            <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
+              <Activity size={20} />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 sm:text-sm">Today Audits</p>
+              <p className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                {statistics.daily.auditCount}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
+            <div className="rounded-xl bg-green-50 p-3 text-green-600">
+              <TrendingUp size={20} />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 sm:text-sm">Monthly Audits</p>
+              <p className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                {statistics.monthly.auditCount}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
+            <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
+              <Building2 size={20} />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 sm:text-sm">MMUs (Month)</p>
+              <p className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                {statistics.monthly.mmuAudited}
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
         {!isLoggedIn ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
