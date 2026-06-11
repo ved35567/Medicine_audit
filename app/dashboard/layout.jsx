@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { LayoutDashboard, ClipboardList, Menu, X, Bell } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Menu, X, Bell, FileSpreadsheet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [showHover, setShowHover] = useState(false);
+  const [hoverItems, setHoverItems] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [hasUnread, setHasUnread] = useState(false);
   const lastCheckTime = useRef(null);
@@ -25,6 +27,11 @@ export default function DashboardLayout({ children }) {
       href: "/dashboard/medicine_audit",
       icon: ClipboardList,
     },
+    {
+      name: "Today Report",
+      href: "/dashboard/today_report",
+      icon: FileSpreadsheet,
+    },
   ];
 
   useEffect(() => {
@@ -40,12 +47,10 @@ export default function DashboardLayout({ children }) {
 
     const fetchRecentAudits = async () => {
       try {
-        const response = await fetch(
-          `/api/audit/latest?since=${lastCheckTime.current}`,
-        );
+        const response = await fetch(`/api/audit/latest?since=${lastCheckTime.current}`);
         if (response.ok) {
           const newAudits = await response.json();
-          if (newAudits && newAudits.length > 0) {
+          if (newAudits.length > 0) {
             // Update last check time so we don't fetch these again
             lastCheckTime.current = new Date().toISOString();
 
@@ -118,6 +123,34 @@ export default function DashboardLayout({ children }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
+            const isTodayReport = item.name === "Today Report";
+
+            const handleMouseEnter = async () => {
+              if (isTodayReport) {
+                try {
+                  const res = await fetch(`/api/audit/today`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    const audits = data.audits ?? [];
+                    const items = audits.map((a) => ({
+                      id: a._id || Math.random().toString(),
+                      mmu_name: a.mmu_name,
+                      time: a.time || new Date(a.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    }));
+                    setHoverItems(items);
+                    setShowHover(true);
+                  }
+                } catch (e) {
+                  console.error("Error loading today audits", e);
+                }
+              }
+            };
+            const handleMouseLeave = () => {
+              if (isTodayReport) {
+                setShowHover(false);
+                setHoverItems([]);
+              }
+            };
 
             return (
               <motion.div
@@ -127,6 +160,8 @@ export default function DashboardLayout({ children }) {
               >
                 <Link
                   href={item.href}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
                   className={`flex items-center gap-3 xl:gap-4 px-4 xl:px-5 py-3.5 xl:py-4 rounded-2xl transition-all duration-300 group ${
                     active
                       ? "bg-white text-slate-900 shadow-lg"
@@ -135,11 +170,7 @@ export default function DashboardLayout({ children }) {
                 >
                   <Icon
                     size={22}
-                    className={
-                      active
-                        ? "text-slate-900"
-                        : "text-slate-300 group-hover:text-white"
-                    }
+                    className={active ? "text-slate-900" : "text-slate-300 group-hover:text-white"}
                   />
 
                   <span className="font-medium tracking-wide">{item.name}</span>
@@ -147,6 +178,24 @@ export default function DashboardLayout({ children }) {
                     <span className="ml-auto flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
                   )}
                 </Link>
+                {isTodayReport && showHover && (
+                  <div className="absolute left-0  top-full mt-2 w-72 max-h-64 overflow-y-auto rounded-lg bg-white shadow-lg z-50 md:left-64 md:top-0 md:mt-0">
+                    <div className="p-3">
+                      <h4 className="text-sm font-semibold text-slate-800 mb-2">Recent Audits</h4>
+                      {hoverItems.length === 0 ? (
+                        <p className="text-xs text-slate-500">No recent data</p>
+                      ) : (
+                        <ul className="space-y-1">
+                          {hoverItems.slice(0, 10).map((n) => (
+                            <li key={n.id} className="text-xs text-slate-700">
+                              <span className="font-medium">{n.mmu_name}</span> – {n.time}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             );
           })}
@@ -198,28 +247,92 @@ export default function DashboardLayout({ children }) {
 
               <nav className="p-4 sm:p-5 space-y-3">
                 {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = pathname === item.href;
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              const isTodayReport = item.name === "Today Report";
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center gap-4 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl transition-all duration-300 ${
+              const handleMouseEnter = () => {
+                if (isTodayReport) {
+                  // Use existing notifications as recent data source
+                  setHoverItems(notifications.slice().reverse()); // latest first
+                  setShowHover(true);
+                }
+              };
+              const handleMouseLeave = () => {
+                if (isTodayReport) {
+                  setShowHover(false);
+                }
+              };
+
+              return (
+                <motion.div
+                  key={item.href}
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Link
+                    href={item.href}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={(e) => {
+                      if (isTodayReport) {
+                        if (!showHover) {
+                          e.preventDefault();
+                          handleMouseEnter();
+                        }
+                        setShowHover(!showHover);
+                      }
+                    }}
+                    onTouchStart={(e) => {
+                      if (isTodayReport) {
+                        if (!showHover) {
+                          e.preventDefault();
+                          handleMouseEnter();
+                        }
+                        setShowHover(!showHover);
+                      }
+                    }}
+                    className={`flex items-center gap-3 xl:gap-4 px-4 xl:px-5 py-3.5 xl:py-4 rounded-2xl transition-all duration-300 group ${
+                      active
+                        ? "bg-white text-slate-900 shadow-lg"
+                        : "hover:bg-slate-700/60 text-slate-200"
+                    }`}
+                  >
+                    <Icon
+                      size={22}
+                      className={
                         active
-                          ? "bg-white text-slate-900"
-                          : "hover:bg-slate-700 text-slate-200"
-                      }`}
-                    >
-                      <Icon size={22} />
-                      <span className="font-medium">{item.name}</span>
-                      {item.name === "Dashboard" && hasUnread && (
-                        <span className="ml-auto flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
-                      )}
-                    </Link>
-                  );
-                })}
+                          ? "text-slate-900"
+                          : "text-slate-300 group-hover:text-white"
+                      }
+                    />
+                    <span className="font-medium tracking-wide">{item.name}</span>
+                    {item.name === "Dashboard" && hasUnread && (
+                      <span className="ml-auto flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+                    )}
+                  </Link>
+                  {/* Hover panel for Today Report */}
+                  {isTodayReport && showHover && (
+                    <div className="absolute left-0 top-full mt-2 w-full max-h-64 overflow-y-auto rounded-lg bg-white shadow-lg z-50 sm:left-64 sm:w-72">
+                      <div className="p-3">
+                        <h4 className="text-sm font-semibold text-slate-800 mb-2">Recent Audits</h4>
+                        {hoverItems.length === 0 ? (
+                          <p className="text-xs text-slate-500">No recent data</p>
+                        ) : (
+                          <ul className="space-y-1">
+                            {hoverItems.slice(0, 10).map((n) => (
+                              <li key={n.id} className="text-xs text-slate-700">
+                                <span className="font-medium">{n.mmu_name}</span> – {n.time}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
               </nav>
             </motion.aside>
           </>
