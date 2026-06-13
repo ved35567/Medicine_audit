@@ -16,6 +16,7 @@ export async function POST(request) {
     const newAudit = new MedicineAudit({
       audit_date: data.audit_date,
       mmu_name: data.mmu_name,
+      town:data.town,
       vehicle_reg_number: data.vehicle_reg_number,
       apm_name: data.apm_name,
       nodal_officer_name: data.nodal_officer_name,
@@ -23,6 +24,7 @@ export async function POST(request) {
       mmu_pharmacist_name: data.mmu_pharmacist_name,
       vendor_name: data.vendor_name,
       phase: data.phase,
+      auditor_name: data.auditor_name,
       medicines: data.medicines, // contains drug_code, medicine_name, and physical_quantity
     });
 

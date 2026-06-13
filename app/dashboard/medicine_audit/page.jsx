@@ -24,6 +24,7 @@ export default function MedicineAudit() {
   const [formData, setFormData] = useState({
     audit_date: "",
     mmu_name: "",
+    town:"",
     vehicle_reg_number: "",
     apm_name: "",
     nodal_officer_name: "",
@@ -31,6 +32,7 @@ export default function MedicineAudit() {
     mmu_pharmacist_name: "",
     vendor_name: "",
     phase: "",
+    auditor_name:"",
   });
 
   // Get today's date in YYYY-MM-DD format
@@ -246,6 +248,7 @@ export default function MedicineAudit() {
       const requiredFields = [
         "audit_date",
         "mmu_name",
+        "town",
         "vehicle_reg_number",
         "apm_name",
         "nodal_officer_name",
@@ -253,6 +256,7 @@ export default function MedicineAudit() {
         "mmu_pharmacist_name",
         "vendor_name",
         "phase",
+        "auditor_name",
       ];
       const missingFields = requiredFields.filter(
         (field) => !formData[field],
@@ -307,6 +311,7 @@ export default function MedicineAudit() {
         setFormData({
           audit_date: "",
           mmu_name: "",
+          town:"",
           vehicle_reg_number: "",
           apm_name: "",
           nodal_officer_name: "",
@@ -314,6 +319,7 @@ export default function MedicineAudit() {
           mmu_pharmacist_name: "",
           vendor_name: "",
           phase: "",
+          auditor_name:"",
         });
         setInvalidFields({});
         setInvalidQuantityIndex(null);
@@ -452,6 +458,24 @@ export default function MedicineAudit() {
                 ))}
               </select>
             </div>
+{/* Town Name */}
+            <div>
+              <label className="text-sm font-semibold text-slate-700 mb-2 block">
+                Town
+              </label>
+
+              <input
+                type="text"
+                id="town"
+                name="town"
+                value={formData.town}
+                onChange={handleFormChange}
+                placeholder="Enter Town Name"
+                required
+                className={`w-full rounded-xl border ${getFieldBorderClass("town")} px-4 py-3 outline-none sm:rounded-2xl`}
+              />
+            </div>
+
 
             {/* Vehicle Registration */}
             <div>
@@ -585,7 +609,26 @@ export default function MedicineAudit() {
                 className={`w-full rounded-xl border ${getFieldBorderClass("phase")} bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl`}
               />
             </div>
+            {/* Auditor Name */}
+            <div>
+              <label className="text-sm font-semibold text-slate-700 mb-2 block">
+                Auditor Name
+              </label>
+
+              <input
+                type="text"
+                id="auditor_name"
+                name="auditor_name"
+                value={formData.auditor_name}
+                onChange={handleFormChange}
+                placeholder="Enter TPA Auditor name"
+                required
+                className={`w-full rounded-xl border ${getFieldBorderClass("auditor_name")} px-4 py-3 outline-none sm:rounded-2xl`}
+              />
+            </div>
+
           </div>
+
 
           {/* Table Section */}
           <div className="mt-10 border-t border-slate-200 pt-8 sm:mt-12 sm:pt-10">

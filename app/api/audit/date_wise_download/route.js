@@ -12,32 +12,6 @@ const authCookieName = "dashboardAuth";
 const validateAuth = (request) =>
   request.cookies.get(authCookieName)?.value === "true";
 
-const getTodayIstRange = () => {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const dateParts = Object.fromEntries(
-    parts
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value]),
-  );
-
-  const dateKey = `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
-  const start = new Date(`${dateKey}T00:00:00+05:30`);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-
-  const monthStart = new Date(
-    `${dateParts.year}-${dateParts.month}-01T00:00:00+05:30`,
-  );
-
-  return { dateKey, start, end, monthStart };
-};
-
 const sanitizeFilenamePart = (value) =>
   String(value || "")
     .trim()
@@ -152,18 +126,42 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const mmuName = searchParams.get("mmu_name");
-    const { dateKey, start, end, monthStart } = getTodayIstRange();
+    const selectedDate = searchParams.get("date");
+    if (!mmuName) {
+      return NextResponse.json(
+        { error: "MMU Name is required" },
+        { status: 400 },
+      );
+    }
+    if (!selectedDate) {
+      return NextResponse.json(
+        {
+          error: "Date is required",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
+    const start = new Date(`${selectedDate}T00:00:00+05:30`);
+
+    const end = new Date(start);
+
+    end.setDate(end.getDate() + 1);
     const query = {
+      mmu_name: mmuName.trim(),
       createdAt: {
         $gte: start,
         $lt: end,
       },
     };
 
-    if (mmuName && mmuName.trim() !== "") {
-      query.mmu_name = mmuName.trim();
-    }
+    const monthStart = new Date(
+      `${selectedDate.slice(0, 7)}-01T00:00:00+05:30`,
+    );
+
+    const dateKey = selectedDate;
 
     const audits = await MedicineAudit.find(query)
       .sort({ createdAt: -1 })
@@ -172,36 +170,37 @@ export async function GET(request) {
     if (!audits.length) {
       return NextResponse.json(
         {
-          error: mmuName
-            ? `No audits found today for ${mmuName}`
-            : "No audits found for today",
+          error: `No audits found for ${mmuName} on ${selectedDate}`,
         },
         { status: 404 },
       );
     }
 
-    // Monthly Auditor Logic
-    const monthlyCount = await MedicineAudit.countDocuments({
-      createdAt: {
-        $gte: monthStart,
-      },
-    });
-
-    const seniorAuditor =
-      monthlyCount > 60
-        ? {
-            name: "Dr. Abhishek Khandelwal",
-            designation: "(Senior Medical Auditor)",
-          }
-        : {
-            name: "Major Rakesh Sharma",
-            designation: "(Retd. Medical Officer Indian Army)",
-          };
-
     const workbook = new ExcelJS.Workbook();
     const usedSheetNames = new Set();
 
     for (const audit of audits) {
+      // MMU wise monthly count
+      const serialNumber = await MedicineAudit.countDocuments({
+        mmu_name: audit.mmu_name,
+
+        createdAt: {
+          $gte: monthStart,
+          $lte: audit.createdAt,
+        },
+      });
+
+      const seniorAuditor =
+        serialNumber > 60
+          ? {
+              name: "Dr. Abhishek Khandelwal",
+              designation: "(Senior Medical Auditor)",
+            }
+          : {
+              name: "Major Rakesh Sharma",
+              designation: "(Retd. Medical Officer Indian Army)",
+            };
+
       const sheet = workbook.addWorksheet(
         sanitizeWorksheetName(audit.mmu_name, "Audit", usedSheetNames),
       );

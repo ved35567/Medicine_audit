@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { LayoutDashboard, ClipboardList, Menu, X, Bell, FileSpreadsheet } from "lucide-react";
+import { LayoutDashboard,BriefcaseMedical, ClipboardList, Menu, X, Bell, FileSpreadsheet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardLayout({ children }) {
@@ -27,11 +27,17 @@ export default function DashboardLayout({ children }) {
       href: "/dashboard/medicine_audit",
       icon: ClipboardList,
     },
-    {
-      name: "Today Report",
-      href: "/dashboard/today_report",
+     {
+      name: "Capture Application Stock",
+      href: "/dashboard/capture_application_stock",
       icon: FileSpreadsheet,
     },
+    {
+      name: "Medicine Audit Reports",
+      href: "/dashboard/medicine_audit_report",
+      icon: BriefcaseMedical,
+    },
+   
   ];
 
   useEffect(() => {
@@ -123,7 +129,7 @@ export default function DashboardLayout({ children }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
-            const isTodayReport = item.name === "Today Report";
+            const isTodayReport = item.name === "Medicine Audit Reports";
 
             const handleMouseEnter = async () => {
               if (isTodayReport) {

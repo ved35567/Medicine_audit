@@ -31,13 +31,19 @@ export default function TodayReport() {
 
   const getTodayDateString = () => {
     const today = new Date();
+
     const year = today.getFullYear();
+
     const month = String(today.getMonth() + 1).padStart(2, "0");
+
     const day = String(today.getDate()).padStart(2, "0");
+
     return `${year}-${month}-${day}`;
   };
 
   const todayDate = getTodayDateString();
+
+  const [selectedDate, setSelectedDate] = useState(todayDate);
 
   useEffect(() => {
     async function fetchMmuData() {
@@ -96,14 +102,33 @@ export default function TodayReport() {
 
     try {
       const queryParams = new URLSearchParams();
+if (!selectedMmu) {
+  setMessage({
+    type: "error",
+    text: "Please select MMU",
+  });
 
+  return;
+}
+
+if (!selectedDate) {
+  setMessage({
+    type: "error",
+    text: "Please select Date",
+  });
+
+  return;
+}
       if (selectedMmu) {
         queryParams.append("mmu_name", selectedMmu);
       }
+      if (selectedDate) {
+        queryParams.append("date", selectedDate);
+      }
+      
 
-      const endpoint = queryParams.toString()
-        ? `/api/audit/today-download?${queryParams.toString()}`
-        : "/api/audit/today-download";
+      const endpoint =
+  `/api/audit/date_wise_download?mmu_name=${encodeURIComponent(selectedMmu)}&date=${selectedDate}`;
 
       const response = await fetch(endpoint, {
         credentials: "include",
@@ -130,7 +155,7 @@ export default function TodayReport() {
       a.href = url;
       a.download =
         getFilenameFromResponse(response) ||
-        `medicine_audit_today_${selectedMmu || "all"}_${todayDate}.xlsx`;
+        `${todayDate}_Medicine_Audit_Report_of_${selectedMmu || "all"}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -189,7 +214,10 @@ export default function TodayReport() {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setLoginMessage({ type: "error", text: "Login failed. Try again later." });
+      setLoginMessage({
+        type: "error",
+        text: "Login failed. Try again later.",
+      });
     } finally {
       setLoginLoading(false);
     }
@@ -220,16 +248,16 @@ export default function TodayReport() {
       >
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              Today Report
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Download physical medicine audit reports submitted today ({todayDate})
+              Download medicine audit reports submitted via MMU
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-4 py-2 shadow-xs">
             <Calendar size={18} className="text-slate-500" />
-            <span className="text-sm font-semibold text-slate-700">{todayDate}</span>
+            <span className="text-sm font-semibold text-slate-700">
+              {todayDate}
+            </span>
           </div>
         </div>
 
@@ -315,10 +343,10 @@ export default function TodayReport() {
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-800">
-                  Download Today Audit Reports
+                  Download Medicine Audit Reports
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Select an MMU to filter or download for all MMUs.
+                  Select an MMU and Date to download Reports.
                 </p>
               </div>
               <button
@@ -374,6 +402,25 @@ export default function TodayReport() {
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                   <Building2 size={18} />
+                </div>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Audit Date
+                </label>
+
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    max={todayDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                  />
+
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                    <Calendar size={18} />
+                  </div>
                 </div>
               </div>
             </div>

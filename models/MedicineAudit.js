@@ -32,6 +32,18 @@ const medicineAuditSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    auditor_name:{
+      type: String,
+      required: true,
+      trim: true,
+    }
+,
+    town: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     vehicle_reg_number: {
       type: String,
       required: true,
@@ -68,6 +80,8 @@ const medicineAuditSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    
+
     medicines: {
       type: [medicineAuditItemSchema],
       required: true,

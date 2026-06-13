@@ -1,0 +1,158 @@
+Stock Status Report
+Bilaspur-MMU04
+MUKHYA MANTRI SLUM SWASTHYA YOJANA
+Drug CodeDrug NameA/UStock Qty
+MMU
+Bilaspur-MMU04
+S.
+6/12/26 12:02
+Generated On
+No.94D12Albendazole Tablets IP 400 mg
+1
+BOTTLE72D18Aluminium Hydroxide+ Magnesium Hydro naxide + Active dimethicon/simethicon (Liq.
+Antacid) Gel
+2
+No.651D17Aluminium Hydroxide + Magnesium Hydroxide (Antacid) chewable Tab. 500 mg
+3
+No.795D731AAmlodipine 5mg Tablet
+4
+No.536D28Amoxycillin Cap. IP 250 mg
+5
+No.586D29Amoxycillin Cap. IP 500 mg
+6
+No.773D0010AMOXYCILLIN + CLAUVANATE 625
+7
+BOTTLE223D30Amoxycillin Powder for Oral Suspension IP 125 mg/ 5 ml
+8
+No.382D51AAscorbic Acid (Vit C) 500 mg Tablet
+9
+No.35D53Atenolol 25 mg Tablet IP
+10
+No.960D52Atenolol 50 mg Tablet IP
+11
+No.590D60Azithromycin 250 Tablet IP
+12
+No.645D61Azithromycin 500 Tablet IP
+13
+Unit187D0026B COMPLEX SYRUP
+14
+No.1,024D0027B COMPLEX TABLET / CAPSULES
+15
+TUBE3D73Betamethasone Valerate IP 0.1%
+16
+No.436D78Bisacodyl Tab. IP 5 mg
+17
+No.2,072D85Calcium Salts Tab 500mg
+18
+Unit181D0033CARRIER OIL FOR MASSAGE
+19
+No.515D0034CEFIXIME TABLETS 200 MG
+20
+No.38D0022CETRIZINE SYRUP
+21
+BOTTLE19D125Ciprofloxacin Eye Drops IP 0.3% w/v
+22
+No.190D123Ciprofloxacin Tab. IP 500 mg
+23
+Unit38D0048CLINDAMYCIN GEL
+24
+No.30D588Clonazepam 0.5 mg tablet
+25
+TUBE96D590Clotrimazole Betamethasone + Neomycine Sulphate Cream 5mg
+26
+BOTTLE29D592Clotrimazole + Steroid Ear Drops 1%w/v + 2%w/v
+27
+TUBE45D591Clotrimazole + Steroid Ointment
+28
+TUBE299D132Clotrimozole Cream IP
+29
+TUBE487D171Diclofenac Gel 1 %
+30
+No.240D168Diclofenac Sodium Tab. IP 50 mg
+31
+No.458D0063DICYCLOMINE +  MEFANEMIC ACID TABLET
+32
+No.40D198Enalapril Maleate (Scored) 5 mg Tab. IP
+33
+No.11D212Etiophylline + Theophylline Tab 77mg + 23mg(100mg)
+34
+BOTTLE3D223Ferrous Sulphate & Folic Acid IP Syrup
+35
+No.2D0078Ferrous Sulphate with Folic Acid Tab.
+36
+No.144D225Fluconazole Tab IP 150 mg
+37
+MG15D0082FOLIC ACID 400 MCG TABLET IP
+38
+No.435D0084FOLIC ACID TAB 5MG
+39
+Unit37D0088FUSIDIC SULPHADIAZINE OINTMENT
+40
+No.471D545Glimepiride 1mg Tablet
+41
+No.105D546Glimepiride 2mg tablet
+42
+No.20D260AHydrochlorothiazide Tab. I.P. 12.5 mg
+43
+No.50D268Hydroxyurea 500mg Capsule
+44
+Unit17D00108LACTULOSE SYRUP 30MG
+45
+No.130D110Metformin HydrochlorideTab. IP 500 mg
+46
+No.94D344Metronidazole Tab 200
+47
+No.835D345Metronidazole Tab 400
+48
+TUBE86D349Miconazole Nitrate 2% Cream IP
+49
+Unit83D00124MONTELUKAST + CETRIZINE SYRUP
+50
+No.145D00125MONTELUKAST + CETRIZINE TABLET
+51
+No.945D63Multivitamin Multimineral Tab / Cap
+52
+No.1,195D63AMultivitamin Tab NFI
+53
+BOTTLE8D385Ondansetron Syrup
+54
+No.358D706Ondansetron Tablet
+55
+Unit56D00133ORNIDAZOLE + OFLOXACIN SYRUP
+56
+No.38D00134ORNIDAZOLE + OFLOXACIN TAB
+57
+GM474D0001ORS POWDER IP 4 MG
+58
+No.1,073D00136PANTOPRAZOLE TABLET
+59
+ML4D396Paracetamol Syrup. IP 125 mg / 5 ml
+60
+TUBE25D714Permethrin 5% Cream
+61
+TUBE97D422Povidone Iodine Ointment USP. X1XII 5 %
+62
+No.31D427Prednisolone Tab. IP 10 mg
+63
+No.20D428Prednisolone Tablet IP 20 mg
+64
+No.169D00148Pregabalin Tablets
+65
+No.30D00151PYRIDOXINE HYDROCHLORIDE (VIT B6) TABLET 50MG
+66
+BOTTLE5D733Sodium Chloride Nasal Drop
+67
+Unit25D00159SUCRALFATE  SYRUP
+68
+BOTTLE1D0000Surgical Spirit IP Solution 94%
+69
+No.2D00162TAB CETRIZINE 10 MG
+70
+MG65D00164TELMISARATAN 20MG
+71
+MG1,598D00165TELMISARATAN 40MG
+72
+BOTTLE48D552Tobramycin eye drop 0.30%
+73
+No.20D00168TRYPSIN AND CHYMOTRYPSIN TABLET
+74
