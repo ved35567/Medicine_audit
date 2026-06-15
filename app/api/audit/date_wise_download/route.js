@@ -482,9 +482,9 @@ export async function GET(request) {
 
     const buffer = await workbook.xlsx.writeBuffer();
     const filenameParts = [
-      "medicine_audit",
-      mmuName ? sanitizeFilenamePart(mmuName) : "all_mmus",
       dateKey,
+      "Medicine Audit Report",
+      mmuName ? sanitizeFilenamePart(mmuName) : "all_mmus",
     ].filter(Boolean);
     const filename = `${filenameParts.join("_")}.xlsx`;
 

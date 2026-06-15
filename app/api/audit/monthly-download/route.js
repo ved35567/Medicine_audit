@@ -1,4 +1,5 @@
 import MedicineAudit from "@/models/MedicineAudit";
+import StockImport from "@/models/MedicineStockItem"; // ✅ Added
 import mongoose from "mongoose";
 import ExcelJS from "exceljs";
 import { formatToIST, formatDateOnly } from "@/lib/dateUtils";
@@ -17,9 +18,9 @@ export async function GET(request) {
       });
     }
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month"); // YYYY-MM format
-    const year = searchParams.get("year"); // YYYY format
-    const mmu_name = searchParams.get("mmu_name"); // MMU Filter
+    const month = searchParams.get("month");
+    const year = searchParams.get("year");
+    const mmu_name = searchParams.get("mmu_name");
 
     // Connect to MongoDB
     if (!mongoose.connections[0].readyState) {
@@ -29,22 +30,18 @@ export async function GET(request) {
     let startDate, endDate;
 
     if (month) {
-      // Specific month
       const [y, m] = month.split("-");
       startDate = new Date(y, m - 1, 1);
       endDate = new Date(y, m, 1);
     } else if (year) {
-      // Entire year
       startDate = new Date(year, 0, 1);
       endDate = new Date(year + 1, 0, 1);
     } else {
-      // Current month
       const today = new Date();
       startDate = new Date(today.getFullYear(), today.getMonth(), 1);
       endDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     }
 
-    // Base query
     const query = {
       createdAt: { $gte: startDate, $lt: endDate },
     };
@@ -53,8 +50,8 @@ export async function GET(request) {
       query.mmu_name = mmu_name;
     }
 
-    // Fetch audits for the period
-    const audits = await MedicineAudit.find(query).sort({ createdAt: -1 });
+    // Fetch audits
+    const audits = await MedicineAudit.find(query).sort({ createdAt: -1 }).lean(); // ✅ .lean() added
 
     if (!audits || audits.length === 0) {
       return new Response(
@@ -67,6 +64,12 @@ export async function GET(request) {
         },
       );
     }
+
+    // ✅ StockImport fetch karo audit_id se
+    const auditIds = audits.map((audit) => audit._id);
+    const stockImports = await StockImport.find({
+      audit_id: { $in: auditIds },
+    }).lean();
 
     // Create workbook
     const workbook = new ExcelJS.Workbook();
@@ -87,6 +90,7 @@ export async function GET(request) {
       { header: "Phase", key: "phase", width: 12 },
       { header: "Drug Code", key: "drug_code", width: 12 },
       { header: "Medicine Name", key: "medicine_name", width: 25 },
+      { header: "Application Stock", key: "application_stock", width: 18 }, // ✅ New column
       { header: "Physical Quantity", key: "physical_quantity", width: 15 },
     ];
 
@@ -110,8 +114,19 @@ export async function GET(request) {
       const auditDate = formatDateOnly(audit.audit_date);
       const submittedDate = formatToIST(audit.createdAt);
 
+      // ✅ Is audit ka stock record dhundo
+      const auditStock = stockImports.find(
+        (s) => s.audit_id.toString() === audit._id.toString()
+      );
+
       if (audit.medicines && audit.medicines.length > 0) {
         audit.medicines.forEach((medicine) => {
+
+          // ✅ Nested medicines array mein drug_code se match karo
+          const matchedMedicine = auditStock?.medicines?.find(
+            (m) => m.drug_code === medicine.drug_code
+          );
+
           const row = auditSheet.getRow(rowIndex);
           row.values = {
             sno: auditIndex + 1,
@@ -127,14 +142,12 @@ export async function GET(request) {
             phase: audit.phase,
             drug_code: medicine.drug_code,
             medicine_name: medicine.medicine_name,
+            application_stock: matchedMedicine?.application_stock ?? "N/A", // ✅
             physical_quantity: medicine.physical_quantity,
           };
 
-          row.alignment = {
-            horizontal: "center",
-            vertical: "center",
-          };
-          row.borders = {
+          row.alignment = { horizontal: "center", vertical: "center" };
+          row.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },
@@ -161,7 +174,6 @@ export async function GET(request) {
     // Sheet 2: Summary Statistics
     const summarySheet = workbook.addWorksheet("Summary");
 
-    // Calculate statistics
     const mmuSet = new Set(audits.map((a) => a.mmu_name));
     let totalMedicines = 0;
     const medicineBreakdown = {};
@@ -179,7 +191,6 @@ export async function GET(request) {
       });
     });
 
-    // Summary header
     summarySheet.getCell("A1").value = "Monthly Audit Summary";
     summarySheet.getCell("A1").font = {
       bold: true,
@@ -187,7 +198,6 @@ export async function GET(request) {
       color: { argb: "1E293B" },
     };
 
-    // Period
     const periodText = month
       ? `Month: ${new Date(month + "-01").toLocaleString("en-IN", {
           month: "long",
@@ -203,7 +213,6 @@ export async function GET(request) {
     summarySheet.getCell("A2").value = periodText;
     summarySheet.getCell("A2").font = { bold: true, size: 12 };
 
-    // Statistics
     let statRow = 4;
     const stats = [
       ["Total Audits Completed", audits.length],
@@ -226,7 +235,6 @@ export async function GET(request) {
       statRow++;
     });
 
-    // Medicine breakdown
     summarySheet.getCell(`A${statRow + 2}`).value = "Medicine Breakdown";
     summarySheet.getCell(`A${statRow + 2}`).font = { bold: true, size: 12 };
 
@@ -272,7 +280,6 @@ export async function GET(request) {
     // Generate buffer
     const buffer = await workbook.xlsx.writeBuffer();
 
-    // Create filename
     const dateStr = new Date().toISOString().split("T")[0];
     const filename = month
       ? `medicine_audit_${month}.xlsx`
@@ -280,7 +287,6 @@ export async function GET(request) {
         ? `medicine_audit_${year}.xlsx`
         : `medicine_audit_${dateStr}.xlsx`;
 
-    // Return Excel file
     return new Response(buffer, {
       headers: {
         "Content-Type":

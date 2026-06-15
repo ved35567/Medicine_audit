@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,498 +5,453 @@ import {
   FileSpreadsheet,
   AlertCircle,
   CheckCircle,
-  LayoutDashboard,
   Building2,
-  Filter,
-  Calendar,
-  ChevronDown,
-  Sparkles,
   Activity,
   TrendingUp,
+  Download,
+  LogOut,
+  LogIn,
+  Calendar,
+  ChevronRight,
+  Stethoscope,
+  BarChart3,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// ── Stat Card ──────────────────────────────────────────────────
+function StatCard({ icon: Icon, label, value, color, delay }) {
+  const colors = {
+    blue:   { bg: "bg-blue-500",   light: "bg-blue-50",   text: "text-blue-600",   ring: "ring-blue-100" },
+    emerald:{ bg: "bg-emerald-500",light: "bg-emerald-50",text: "text-emerald-600",ring: "ring-emerald-100" },
+    violet: { bg: "bg-violet-500", light: "bg-violet-50", text: "text-violet-600", ring: "ring-violet-100" },
+  };
+  const c = colors[color];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4, ease: "easeOut" }}
+      className="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm p-5 flex items-center gap-4 group hover:shadow-md transition-shadow duration-300"
+    >
+      {/* bg blob */}
+      <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full ${c.bg} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
+      <div className={`shrink-0 h-12 w-12 rounded-xl ${c.light} ${c.text} flex items-center justify-center ring-4 ${c.ring}`}>
+        <Icon size={22} />
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+        <motion.p
+          key={value}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-3xl font-bold text-slate-800 mt-0.5 tabular-nums"
+        >
+          {value}
+        </motion.p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Download Type Pill ─────────────────────────────────────────
+function TypePill({ value, label, icon: Icon, active, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(value)}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+        active
+          ? "bg-slate-900 text-white shadow-md"
+          : "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+      }`}
+    >
+      <Icon size={15} />
+      {label}
+    </button>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────
 export default function Dashboard() {
   const [mmuDetails, setMmuDetails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-  const [downloadType, setDownloadType] = useState("monthly"); // 'monthly', 'dateRange', 'all'
+  const [downloadType, setDownloadType] = useState("monthly");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginMessage, setLoginMessage] = useState({ type: "", text: "" });
-  const [loginCredentials, setLoginCredentials] = useState({
-    userId: "",
-    password: "",
-  });
-
+  const [loginCredentials, setLoginCredentials] = useState({ userId: "", password: "" });
   const [filters, setFilters] = useState({
     mmu_name: "",
     month: new Date().toISOString().split("T")[0].slice(0, 7),
     startDate: "",
     endDate: "",
   });
-
   const [statistics, setStatistics] = useState({
     daily: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
     monthly: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
   });
 
   useEffect(() => {
-    async function fetchMmuData() {
-      try {
-        const response = await fetch("/api/mmu_details");
-        const mmuData = await response.json();
-        setMmuDetails(Array.isArray(mmuData) ? mmuData : []);
-      } catch (error) {
-        console.error("Error fetching MMU details:", error);
-      }
-    }
-    fetchMmuData();
+    fetch("/api/mmu_details")
+      .then((r) => r.json())
+      .then((d) => setMmuDetails(Array.isArray(d) ? d : []))
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch("/api/auth/validate", {
-          method: "GET",
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (data?.success) {
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.error("Auth validation error:", error);
-      }
-    }
-
-    checkAuth();
+    fetch("/api/auth/validate", { method: "GET", credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => { if (d?.success) setIsLoggedIn(true); })
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
-    async function fetchStatistics() {
-      try {
-        const response = await fetch("/api/audit/statistics");
-        const statsData = await response.json();
-
-        if (statsData && statsData.success) {
-          setStatistics(statsData);
-        }
-      } catch (error) {
-        console.error("Error fetching statistics:", error);
-      }
-    }
-
-    fetchStatistics();
-    // Refresh statistics every 30 seconds
-    const interval = setInterval(fetchStatistics, 30000);
-    return () => clearInterval(interval);
+    const fetchStats = () =>
+      fetch("/api/audit/statistics")
+        .then((r) => r.json())
+        .then((d) => { if (d?.success) setStatistics(d); })
+        .catch(console.error);
+    fetchStats();
+    const iv = setInterval(fetchStats, 30000);
+    return () => clearInterval(iv);
   }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters((p) => ({ ...p, [name]: value }));
   };
 
   const handleDownload = async () => {
-    if (!isLoggedIn) {
-      setMessage({
-        type: "error",
-        text: "Please login first to download reports.",
-      });
-      return;
-    }
-
+    if (!isLoggedIn) { setMessage({ type: "error", text: "Please login first." }); return; }
     setLoading(true);
     setMessage({ type: "", text: "" });
-
     try {
+      const q = new URLSearchParams();
+      if (filters.mmu_name) q.append("mmu_name", filters.mmu_name);
       let endpoint = "";
-      let queryParams = new URLSearchParams();
-
-      if (filters.mmu_name) {
-        queryParams.append("mmu_name", filters.mmu_name);
-      }
-
       if (downloadType === "monthly") {
-        if (!filters.month) {
-          setMessage({ type: "error", text: "Please select a month." });
-          setLoading(false);
-          return;
-        }
-        queryParams.append("month", filters.month);
-        endpoint = `/api/audit/monthly-download?${queryParams.toString()}`;
+        if (!filters.month) { setMessage({ type: "error", text: "Please select a month." }); setLoading(false); return; }
+        q.append("month", filters.month);
+        endpoint = `/api/audit/monthly-download?${q}`;
       } else if (downloadType === "dateRange") {
-        if (!filters.startDate || !filters.endDate) {
-          setMessage({
-            type: "error",
-            text: "Please select both start and end dates.",
-          });
-          setLoading(false);
-          return;
-        }
-        queryParams.append("startDate", filters.startDate);
-        queryParams.append("endDate", filters.endDate);
-        endpoint = `/api/audit/date-range-download?${queryParams.toString()}`;
+        if (!filters.startDate || !filters.endDate) { setMessage({ type: "error", text: "Please select both dates." }); setLoading(false); return; }
+        q.append("startDate", filters.startDate);
+        q.append("endDate", filters.endDate);
+        endpoint = `/api/audit/date-range-download?${q}`;
       } else {
-        // All Data
-        endpoint = `/api/audit/download${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+        endpoint = `/api/audit/download${q.toString() ? `?${q}` : ""}`;
       }
-
-      const response = await fetch(endpoint, {
-        credentials: "include",
-      });
-
+      const response = await fetch(endpoint, { credentials: "include" });
       if (!response.ok) {
-        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
-        try {
-          // Try to extract a specific error message from the backend if available
-          const errData = await response.json();
-          if (errData.error || errData.message) {
-            errorMessage = errData.error || errData.message;
-          }
-        } catch (e) {}
-        throw new Error(errorMessage);
+        let msg = `Server error: ${response.status}`;
+        try { const e = await response.json(); msg = e.error || e.message || msg; } catch (_) {}
+        throw new Error(msg);
       }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `medicine_audit_report_${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.download = `medicine_audit_${new Date().toISOString().split("T")[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
-      setMessage({
-        type: "success",
-        text: "Excel file downloaded successfully!",
-      });
-    } catch (error) {
-      console.error("Error downloading Excel:", error);
-      setMessage({
-        type: "error",
-        text:
-          error.message || "Error downloading Excel file. Please try again.",
-      });
+      setMessage({ type: "success", text: "Report downloaded successfully!" });
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Download failed. Try again." });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLoginChange = (e) => {
-    const { name, value } = e.target;
-    setLoginCredentials((prev) => ({ ...prev, [name]: value }));
-  };
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMessage({ type: "", text: "" });
-
     try {
       const res = await fetch("/api/auth/validate", {
-        method: "POST",
-        credentials: "include",
+        method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginCredentials),
       });
       const data = await res.json();
-
-      if (data && data.success) {
+      if (data?.success) {
         setIsLoggedIn(true);
-        setLoginMessage({
-          type: "success",
-          text: "Login successful. You can now download reports.",
-        });
+        setLoginMessage({ type: "success", text: "Logged in successfully." });
       } else {
-        setLoginMessage({
-          type: "error",
-          text: "Invalid credentials. Please use the correct user ID and password.",
-        });
+        setLoginMessage({ type: "error", text: "Invalid credentials." });
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      setLoginMessage({ type: "error", text: "Login failed. Try again later." });
-    }
+    } catch { setLoginMessage({ type: "error", text: "Login failed. Try again." }); }
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      setIsLoggedIn(false);
-      setLoginCredentials({ userId: "", password: "" });
-      setMessage({ type: "", text: "" });
-      setLoginMessage({ type: "", text: "" });
-    }
+    try { await fetch("/api/auth/logout", { method: "POST", credentials: "include" }); } catch {}
+    setIsLoggedIn(false);
+    setLoginCredentials({ userId: "", password: "" });
+    setMessage({ type: "", text: "" });
+    setLoginMessage({ type: "", text: "" });
   };
 
+  const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 transition-all duration-200";
+
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-8">
-      <motion.div
-        initial={{ opacity: 0, y: -15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-auto w-full max-w-4xl"
-      >
-        <h1 className="mb-6 text-2xl font-bold text-slate-800">
-          Dashboard Reports
-        </h1>
+    <div className="min-h-screen bg-slate-200 px-4 py-8 sm:px-8">
+      <div className="mx-auto w-full max-w-4xl space-y-8">
 
-        {/* Statistics Section - Visible to Everyone */}
+        {/* ── Page Header ── */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8 grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3"
+          className="flex items-start justify-between"
         >
-          <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
-            <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
-              <Activity size={20} />
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-6 w-1 rounded-full bg-emerald-500" />
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Live Dashboard</span>
             </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500 sm:text-sm">Today Audits</p>
-              <p className="text-2xl font-bold text-slate-800 sm:text-3xl">
-                {statistics.daily.auditCount}
-              </p>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Audit Reports
+            </h1>
+            <p className="text-sm text-slate-400 mt-1">
+              {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </p>
           </div>
-
-          <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
-            <div className="rounded-xl bg-green-50 p-3 text-green-600">
-              <TrendingUp size={20} />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500 sm:text-sm">Monthly Audits</p>
-              <p className="text-2xl font-bold text-slate-800 sm:text-3xl">
-                {statistics.monthly.auditCount}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
-            <div className="rounded-xl bg-purple-50 p-3 text-purple-600">
-              <Building2 size={20} />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500 sm:text-sm">MMUs (Month)</p>
-              <p className="text-2xl font-bold text-slate-800 sm:text-3xl">
-                {statistics.monthly.mmuAudited}
-              </p>
-            </div>
+          <div className="hidden sm:flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-semibold text-slate-600">Live</span>
           </div>
         </motion.div>
 
-        {!isLoggedIn ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-semibold text-slate-800">
-              Login to Access Downloads
-            </h2>
+        {/* ── Stat Cards ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard icon={Activity}   label="Today's Audits"  value={statistics.daily.auditCount}   color="blue"    delay={0.05} />
+          <StatCard icon={TrendingUp} label="Monthly Audits"  value={statistics.monthly.auditCount} color="emerald" delay={0.1}  />
+          <StatCard icon={Building2}  label="MMUs This Month" value={statistics.monthly.mmuAudited} color="violet"  delay={0.15} />
+        </div>
 
-            {loginMessage.text && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`mb-6 flex items-center gap-3 rounded-xl p-4 ${
-                  loginMessage.type === "success"
-                    ? "border border-green-200 bg-green-50 text-green-700"
-                    : "border border-red-200 bg-red-50 text-red-700"
-                }`}
-              >
-                {loginMessage.type === "success" ? (
-                  <CheckCircle size={20} className="shrink-0" />
-                ) : (
-                  <AlertCircle size={20} className="shrink-0" />
-                )}
-                <span className="font-medium">{loginMessage.text}</span>
-              </motion.div>
-            )}
-
-            <form
-              onSubmit={handleLogin}
-              autoComplete="off"
-              className="grid gap-6"
+        {/* ── Main Card ── */}
+        <AnimatePresence mode="wait">
+          {!isLoggedIn ? (
+            /* ── Login Panel ── */
+            <motion.div
+              key="login"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3 }}
+              className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden"
             >
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  User ID
-                </label>
-                <input
-                  type="text"
-                  name="userId"
-                  autoComplete="off"
-                  value={loginCredentials.userId}
-                  onChange={handleLoginChange}
-                  placeholder="Enter user ID"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-                />
-              </div>
+              {/* top accent strip */}
+              <div className="h-1.5 w-full bg-linear-to-r from-slate-700 via-slate-500 to-slate-700" />
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  autoComplete="new-password"
-                  value={loginCredentials.password}
-                  onChange={handleLoginChange}
-                  placeholder="Enter password"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="rounded-xl bg-slate-900 px-8 py-3 text-white shadow-lg transition hover:bg-slate-800"
-              >
-                Login
-              </button>
-            </form>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-800">
-                  Download Audit Reports
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Use the filters below and click Download Excel.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                Logout
-              </button>
-            </div>
-
-            {message.text && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`mb-6 flex items-center gap-3 rounded-xl p-4 ${
-                  message.type === "success"
-                    ? "border border-green-200 bg-green-50 text-green-700"
-                    : "border border-red-200 bg-red-50 text-red-700"
-                }`}
-              >
-                {message.type === "success" ? (
-                  <CheckCircle size={20} className="shrink-0" />
-                ) : (
-                  <AlertCircle size={20} className="shrink-0" />
-                )}
-                <span className="font-medium">{message.text}</span>
-              </motion.div>
-            )}
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  MMU Name (Optional)
-                </label>
-                <select
-                  name="mmu_name"
-                  value={filters.mmu_name}
-                  onChange={handleFilterChange}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-                >
-                  <option value="">All MMUs</option>
-                  {mmuDetails.map((mmu) => (
-                    <option key={mmu.mmu_name} value={mmu.mmu_name}>
-                      {mmu.mmu_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Download Type
-                </label>
-                <select
-                  value={downloadType}
-                  onChange={(e) => setDownloadType(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-                >
-                  <option value="monthly">Month Wise</option>
-                  <option value="dateRange">Date Range</option>
-                  <option value="all">All Data</option>
-                </select>
-              </div>
-
-              {downloadType === "monthly" && (
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Select Month
-                  </label>
-                  <input
-                    type="month"
-                    name="month"
-                    value={filters.month}
-                    onChange={handleFilterChange}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
-                  />
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                    <Lock size={18} className="text-slate-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-800">Admin Access</h2>
+                    <p className="text-xs text-slate-400">Login to download audit reports</p>
+                  </div>
                 </div>
-              )}
 
-              {downloadType === "dateRange" && (
-                <>
+                <AnimatePresence>
+                  {loginMessage.text && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className={`mb-5 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium ${
+                        loginMessage.type === "success"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
+                    >
+                      {loginMessage.type === "success"
+                        ? <CheckCircle size={16} className="shrink-0" />
+                        : <AlertCircle size={16} className="shrink-0" />}
+                      {loginMessage.text}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Start Date
-                    </label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">User ID</label>
                     <input
-                      type="date"
-                      name="startDate"
-                      value={filters.startDate}
-                      onChange={handleFilterChange}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                      type="text" name="userId" autoComplete="off"
+                      value={loginCredentials.userId}
+                      onChange={(e) => setLoginCredentials((p) => ({ ...p, userId: e.target.value }))}
+                      placeholder="Enter your user ID"
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      End Date
-                    </label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
                     <input
-                      type="date"
-                      name="endDate"
-                      value={filters.endDate}
-                      onChange={handleFilterChange}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-700"
+                      type="password" name="password" autoComplete="new-password"
+                      value={loginCredentials.password}
+                      onChange={(e) => setLoginCredentials((p) => ({ ...p, password: e.target.value }))}
+                      placeholder="Enter password"
+                      className={inputCls}
                     />
                   </div>
-                </>
-              )}
-            </div>
+                  <button
+                    type="submit"
+                    className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white shadow-md hover:bg-slate-800 transition-all duration-200 hover:shadow-lg"
+                  >
+                    <LogIn size={16} />
+                    Sign In
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          ) : (
+            /* ── Download Panel ── */
+            <motion.div
+              key="download"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3 }}
+              className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden"
+            >
+              <div className="h-1.5 w-full bg-linear-to-r from-emerald-400 via-emerald-500 to-teal-500" />
 
-            <div className="mt-8 flex justify-end">
-              <button
-                onClick={handleDownload}
-                disabled={loading}
-                className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 sm:w-auto ${
-                  loading
-                    ? "cursor-not-allowed bg-green-500"
-                    : "bg-green-600 hover:bg-green-700 hover:shadow-xl"
-                }`}
-              >
-                <FileSpreadsheet
-                  size={18}
-                  className={loading ? "animate-pulse" : ""}
-                />
-                {loading ? "Downloading..." : "Download Excel"}
-              </button>
-            </div>
-          </div>
-        )}
-      </motion.div>
+              <div className="p-6 sm:p-8 space-y-7">
+                {/* Panel Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <BarChart3 size={18} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-800">Download Reports</h2>
+                      <p className="text-xs text-slate-400">Filter and export audit data as Excel</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200"
+                  >
+                    <LogOut size={13} />
+                    Logout
+                  </button>
+                </div>
+
+                {/* Alert */}
+                <AnimatePresence>
+                  {message.text && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium ${
+                        message.type === "success"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
+                    >
+                      {message.type === "success"
+                        ? <CheckCircle size={16} className="shrink-0" />
+                        : <AlertCircle size={16} className="shrink-0" />}
+                      {message.text}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Download Type Pills */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Report Type</label>
+                  <div className="flex flex-wrap gap-2">
+                    <TypePill value="monthly"   label="Monthly"    icon={Calendar}       active={downloadType === "monthly"}   onClick={setDownloadType} />
+                    <TypePill value="dateRange" label="Date Range"  icon={ChevronRight}   active={downloadType === "dateRange"} onClick={setDownloadType} />
+                    <TypePill value="all"       label="All Data"   icon={FileSpreadsheet} active={downloadType === "all"}      onClick={setDownloadType} />
+                  </div>
+                </div>
+
+                {/* Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* MMU Filter */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">MMU Name</label>
+                    <select
+                      name="mmu_name" value={filters.mmu_name} onChange={handleFilterChange}
+                      className={inputCls}
+                    >
+                      <option value="">All MMUs</option>
+                      {mmuDetails.map((m) => (
+                        <option key={m.mmu_name} value={m.mmu_name}>{m.mmu_name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Dynamic date filter */}
+                  <AnimatePresence mode="wait">
+                    {downloadType === "monthly" && (
+                      <motion.div
+                        key="month"
+                        initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                      >
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Select Month</label>
+                        <input type="month" name="month" value={filters.month} onChange={handleFilterChange} className={inputCls} />
+                      </motion.div>
+                    )}
+
+                    {downloadType === "dateRange" && (
+                      <motion.div
+                        key="range"
+                        initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                        className="contents"
+                      >
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Start Date</label>
+                          <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} className={inputCls} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">End Date</label>
+                          <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} className={inputCls} />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-100" />
+
+                {/* Download Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleDownload}
+                    disabled={loading}
+                    className={`relative flex items-center gap-2.5 rounded-2xl px-8 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-300 overflow-hidden ${
+                      loading
+                        ? "bg-emerald-400 cursor-not-allowed"
+                        : "bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 hover:shadow-emerald-200 hover:shadow-xl hover:-translate-y-0.5"
+                    }`}
+                  >
+                    {/* shimmer on hover */}
+                    {!loading && (
+                      <span className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                    )}
+                    {loading ? (
+                      <>
+                        <div className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        Preparing file...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={16} />
+                        Download Excel
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import MedicineAudit from "@/models/MedicineAudit";
+import StockImport from "@/models/MedicineStockItem";
 import mongoose from "mongoose";
 import ExcelJS from "exceljs";
 import { formatToIST, formatDateOnly } from "@/lib/dateUtils";
@@ -66,8 +67,6 @@ export async function GET(request) {
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
 
-    // Build query to check BOTH the database creation time
-    // AND the exact audit_date (whether it is saved as String or Date object)
     const query = {
       $or: [
         { createdAt: { $gte: startDate, $lte: endDate } },
@@ -80,8 +79,8 @@ export async function GET(request) {
       query.mmu_name = mmu_name;
     }
 
-    // Fetch audits for the period
-    const audits = await MedicineAudit.find(query).sort({ createdAt: -1 });
+    // Fetch audits
+    const audits = await MedicineAudit.find(query).sort({ createdAt: -1 }).lean(); // ✅ .lean() add kiya
 
     if (!audits || audits.length === 0) {
       return new Response(
@@ -92,6 +91,12 @@ export async function GET(request) {
         { status: 404, headers: { "Content-Type": "application/json" } },
       );
     }
+
+    // ✅ StockImport fetch karo audit_id se
+    const auditIds = audits.map((audit) => audit._id);
+    const stockImports = await StockImport.find({
+      audit_id: { $in: auditIds },
+    }).lean();
 
     // Create workbook
     const workbook = new ExcelJS.Workbook();
@@ -112,6 +117,7 @@ export async function GET(request) {
       { header: "Phase", key: "phase", width: 12 },
       { header: "Drug Code", key: "drug_code", width: 12 },
       { header: "Medicine Name", key: "medicine_name", width: 25 },
+      { header: "Application Stock", key: "application_stock", width: 18 }, // ✅ New column
       { header: "Physical Quantity", key: "physical_quantity", width: 15 },
     ];
 
@@ -135,8 +141,19 @@ export async function GET(request) {
       const auditDate = formatDateOnly(audit.audit_date);
       const submittedDate = formatToIST(audit.createdAt);
 
+      // ✅ Is audit ka stock record dhundo
+      const auditStock = stockImports.find(
+        (s) => s.audit_id.toString() === audit._id.toString()
+      );
+
       if (audit.medicines && audit.medicines.length > 0) {
         audit.medicines.forEach((medicine) => {
+
+          // ✅ Nested medicines array mein drug_code se match karo
+          const matchedMedicine = auditStock?.medicines?.find(
+            (m) => m.drug_code === medicine.drug_code
+          );
+
           const row = auditSheet.getRow(rowIndex);
           row.values = {
             sno: auditIndex + 1,
@@ -152,11 +169,12 @@ export async function GET(request) {
             phase: audit.phase,
             drug_code: medicine.drug_code,
             medicine_name: medicine.medicine_name,
+            application_stock: matchedMedicine?.application_stock ?? "N/A", // ✅ application_stock
             physical_quantity: medicine.physical_quantity,
           };
 
           row.alignment = { horizontal: "center", vertical: "center" };
-          row.borders = {
+          row.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },

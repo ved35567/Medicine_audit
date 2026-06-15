@@ -2,6 +2,7 @@ import MedicineAudit from "@/models/MedicineAudit";
 import mongoose from "mongoose";
 import ExcelJS from "exceljs";
 import { formatToIST, formatDateOnly } from "@/lib/dateUtils";
+import StockImport from "@/models/MedicineStockItem";
 
 const authCookieName = "dashboardAuth";
 
@@ -16,8 +17,11 @@ export async function GET(request) {
         headers: { "Content-Type": "application/json" },
       });
     }
+
     const { searchParams } = new URL(request.url);
     const mmu_name = searchParams.get("mmu_name");
+    const start = searchParams.get("start");
+    const end = searchParams.get("end");
 
     // Connect to MongoDB
     if (!mongoose.connections[0].readyState) {
@@ -29,9 +33,15 @@ export async function GET(request) {
     if (mmu_name && mmu_name.trim() !== "") {
       query.mmu_name = mmu_name;
     }
+    if (start && end) {
+      query.audit_date = {
+        $gte: new Date(start),
+        $lt: new Date(end),
+      };
+    }
 
     // Fetch all audit records
-    const audits = await MedicineAudit.find(query).sort({ createdAt: -1 });
+    const audits = await MedicineAudit.find(query).sort({ createdAt: -1 }).lean();
 
     if (!audits || audits.length === 0) {
       return new Response(JSON.stringify({ message: "No data found" }), {
@@ -39,6 +49,14 @@ export async function GET(request) {
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    // Fetch StockImport records by audit_id
+    const auditIds = audits.map((audit) => audit._id);
+    const stockImports = await StockImport.find({
+      audit_id: { $in: auditIds },
+    }).lean();
+
+    console.log("stockImports", stockImports);
 
     // Create workbook and worksheet
     const workbook = new ExcelJS.Workbook();
@@ -59,6 +77,7 @@ export async function GET(request) {
       { header: "Phase", key: "phase", width: 12 },
       { header: "Drug Code", key: "drug_code", width: 12 },
       { header: "Medicine Name", key: "medicine_name", width: 25 },
+      { header: "Application Quantity", key: "application_stock", width: 15 },
       { header: "Physical Quantity", key: "physical_quantity", width: 15 },
     ];
 
@@ -82,8 +101,18 @@ export async function GET(request) {
       const auditDate = formatDateOnly(audit.audit_date);
       const submittedDate = formatToIST(audit.createdAt);
 
+      // Is audit ka stock record dhundo audit_id se
+      const auditStock = stockImports.find(
+        (s) => s.audit_id.toString() === audit._id.toString()
+      );
+
       if (audit.medicines && audit.medicines.length > 0) {
         audit.medicines.forEach((medicine) => {
+          // Nested medicines array mein drug_code se match karo
+          const matchedMedicine = auditStock?.medicines?.find(
+            (m) => m.drug_code === medicine.drug_code
+          );
+
           const row = worksheet.getRow(rowIndex);
           row.values = {
             sno: auditIndex + 1,
@@ -99,19 +128,20 @@ export async function GET(request) {
             phase: audit.phase,
             drug_code: medicine.drug_code,
             medicine_name: medicine.medicine_name,
+            application_stock: matchedMedicine?.application_stock ?? "N/A",
             physical_quantity: medicine.physical_quantity,
           };
 
           // Style data rows
           row.alignment = { horizontal: "center", vertical: "center" };
-          row.borders = {
+          row.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },
             right: { style: "thin" },
           };
 
-          // Alternate row colors for better readability
+          // Alternate row colors
           if (auditIndex % 2 === 0) {
             row.fill = {
               type: "pattern",
@@ -138,7 +168,9 @@ export async function GET(request) {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="medicine_audit_${new Date().toISOString().split("T")[0]}.xlsx"`,
+        "Content-Disposition": `attachment; filename="medicine_audit_${
+          new Date().toISOString().split("T")[0]
+        }.xlsx"`,
       },
     });
   } catch (error) {
