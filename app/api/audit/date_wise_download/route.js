@@ -180,18 +180,15 @@ export async function GET(request) {
     const usedSheetNames = new Set();
 
     for (const audit of audits) {
-      // MMU wise monthly count
-      const serialNumber = await MedicineAudit.countDocuments({
-        mmu_name: audit.mmu_name,
-
+      // Monthly Auditor Logic
+      const monthlyCount = await MedicineAudit.countDocuments({
         createdAt: {
           $gte: monthStart,
-          $lte: audit.createdAt,
         },
       });
 
       const seniorAuditor =
-        serialNumber > 60
+        monthlyCount > 60
           ? {
               name: "Dr. Abhishek Khandelwal",
               designation: "(Senior Medical Auditor)",
