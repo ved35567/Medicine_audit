@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,6 +11,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import PageSkeleton from "@/components/skeletons/PageSkeleton";
 
 export default function TodayReport() {
   const [mmuDetails, setMmuDetails] = useState([]);
@@ -102,33 +102,33 @@ export default function TodayReport() {
 
     try {
       const queryParams = new URLSearchParams();
-if (!selectedMmu) {
-  setMessage({
-    type: "error",
-    text: "Please select MMU",
-  });
+      if (!selectedMmu) {
+        setMessage({
+          type: "error",
+          text: "Please select MMU",
+        });
 
-  return;
-}
+        return;
+      }
 
-if (!selectedDate) {
-  setMessage({
-    type: "error",
-    text: "Please select Date",
-  });
+      if (!selectedDate) {
+        setMessage({
+          type: "error",
+          text: "Please select Date",
+        });
 
-  return;
-}
+        return;
+      }
+
       if (selectedMmu) {
         queryParams.append("mmu_name", selectedMmu);
       }
       if (selectedDate) {
         queryParams.append("date", selectedDate);
       }
-      
 
       const endpoint =
-  `/api/audit/date_wise_download?mmu_name=${encodeURIComponent(selectedMmu)}&date=${selectedDate}`;
+        `/api/audit/date_wise_download?mmu_name=${encodeURIComponent(selectedMmu)}&date=${selectedDate}`;
 
       const response = await fetch(endpoint, {
         credentials: "include",
@@ -141,7 +141,7 @@ if (!selectedDate) {
           if (errData.error || errData.message) {
             errorMessage = errData.error || errData.message;
           }
-        } catch (e) {}
+        } catch {}
         if (response.status === 401) {
           setIsLoggedIn(false);
           errorMessage = "Your session expired. Please login again.";
@@ -261,13 +261,16 @@ if (!selectedDate) {
           </div>
         </div>
 
-        {authLoading ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
-            <div className="flex items-center justify-center gap-3 text-slate-600">
-              <Loader2 size={20} className="animate-spin" />
-              <span className="font-medium">Checking access...</span>
-            </div>
-          </div>
+        {authLoading || mmuLoading ? (
+          <PageSkeleton
+            title={authLoading ? "Checking Access" : "Loading MMU Options"}
+            description={
+              authLoading
+                ? "Verifying your session before showing report controls."
+                : "Preparing the MMU list for report filtering."
+            }
+            variant="report"
+          />
         ) : !isLoggedIn ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-xl font-semibold text-slate-800">

@@ -108,20 +108,6 @@ const applyTableCellStyle = (cell, horizontal = "left", wrapText = true) => {
   };
 };
 
-const applyBorderToRange = (
-  sheet,
-  startRow,
-  endRow,
-  startColumn = 1,
-  endColumn = 8,
-) => {
-  for (let row = startRow; row <= endRow; row++) {
-    for (let column = startColumn; column <= endColumn; column++) {
-      sheet.getCell(row, column).border = thinBorder;
-    }
-  }
-};
-
 const addLogo = (workbook, sheet) => {
   const logoPath = path.join(process.cwd(), "public", "logo.png");
 

@@ -13,17 +13,15 @@ import {
   LogIn,
   Calendar,
   ChevronRight,
-  Stethoscope,
   BarChart3,
   Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ── Stat Card ──────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color, delay }) {
   const colors = {
-    blue:   { bg: "bg-blue-500",   light: "bg-blue-50",   text: "text-blue-600",   ring: "ring-blue-100" },
-    emerald:{ bg: "bg-emerald-500",light: "bg-emerald-50",text: "text-emerald-600",ring: "ring-emerald-100" },
+    blue: { bg: "bg-blue-500", light: "bg-blue-50", text: "text-blue-600", ring: "ring-blue-100" },
+    emerald: { bg: "bg-emerald-500", light: "bg-emerald-50", text: "text-emerald-600", ring: "ring-emerald-100" },
     violet: { bg: "bg-violet-500", light: "bg-violet-50", text: "text-violet-600", ring: "ring-violet-100" },
   };
   const c = colors[color];
@@ -34,7 +32,6 @@ function StatCard({ icon: Icon, label, value, color, delay }) {
       transition={{ delay, duration: 0.4, ease: "easeOut" }}
       className="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm p-5 flex items-center gap-4 group hover:shadow-md transition-shadow duration-300"
     >
-      {/* bg blob */}
       <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full ${c.bg} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
       <div className={`shrink-0 h-12 w-12 rounded-xl ${c.light} ${c.text} flex items-center justify-center ring-4 ${c.ring}`}>
         <Icon size={22} />
@@ -54,7 +51,6 @@ function StatCard({ icon: Icon, label, value, color, delay }) {
   );
 }
 
-// ── Download Type Pill ─────────────────────────────────────────
 function TypePill({ value, label, icon: Icon, active, onClick }) {
   return (
     <button
@@ -71,7 +67,6 @@ function TypePill({ value, label, icon: Icon, active, onClick }) {
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────
 export default function Dashboard() {
   const [mmuDetails, setMmuDetails] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -144,7 +139,7 @@ export default function Dashboard() {
       const response = await fetch(endpoint, { credentials: "include" });
       if (!response.ok) {
         let msg = `Server error: ${response.status}`;
-        try { const e = await response.json(); msg = e.error || e.message || msg; } catch (_) {}
+        try { const e = await response.json(); msg = e.error || e.message || msg; } catch {}
         throw new Error(msg);
       }
       const blob = await response.blob();
@@ -196,8 +191,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-200 px-4 py-8 sm:px-8">
       <div className="mx-auto w-full max-w-4xl space-y-8">
-
-        {/* ── Page Header ── */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -221,17 +214,14 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* ── Stat Cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard icon={Activity}   label="Today's Audits"  value={statistics.daily.auditCount}   color="blue"    delay={0.05} />
-          <StatCard icon={TrendingUp} label="Monthly Audits"  value={statistics.monthly.auditCount} color="emerald" delay={0.1}  />
-          <StatCard icon={Building2}  label="MMUs This Month" value={statistics.monthly.mmuAudited} color="violet"  delay={0.15} />
+          <StatCard icon={Activity} label="Today's Audits" value={statistics.daily.auditCount} color="blue" delay={0.05} />
+          <StatCard icon={TrendingUp} label="Monthly Audits" value={statistics.monthly.auditCount} color="emerald" delay={0.1} />
+          <StatCard icon={Building2} label="MMUs This Month" value={statistics.monthly.mmuAudited} color="violet" delay={0.15} />
         </div>
 
-        {/* ── Main Card ── */}
         <AnimatePresence mode="wait">
           {!isLoggedIn ? (
-            /* ── Login Panel ── */
             <motion.div
               key="login"
               initial={{ opacity: 0, y: 16 }}
@@ -240,9 +230,7 @@ export default function Dashboard() {
               transition={{ duration: 0.3 }}
               className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden"
             >
-              {/* top accent strip */}
               <div className="h-1.5 w-full bg-linear-to-r from-slate-700 via-slate-500 to-slate-700" />
-
               <div className="p-6 sm:p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -306,7 +294,6 @@ export default function Dashboard() {
               </div>
             </motion.div>
           ) : (
-            /* ── Download Panel ── */
             <motion.div
               key="download"
               initial={{ opacity: 0, y: 16 }}
@@ -318,7 +305,6 @@ export default function Dashboard() {
               <div className="h-1.5 w-full bg-linear-to-r from-emerald-400 via-emerald-500 to-teal-500" />
 
               <div className="p-6 sm:p-8 space-y-7">
-                {/* Panel Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -338,7 +324,6 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                {/* Alert */}
                 <AnimatePresence>
                   {message.text && (
                     <motion.div
@@ -359,19 +344,16 @@ export default function Dashboard() {
                   )}
                 </AnimatePresence>
 
-                {/* Download Type Pills */}
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Report Type</label>
                   <div className="flex flex-wrap gap-2">
-                    <TypePill value="monthly"   label="Monthly"    icon={Calendar}       active={downloadType === "monthly"}   onClick={setDownloadType} />
-                    <TypePill value="dateRange" label="Date Range"  icon={ChevronRight}   active={downloadType === "dateRange"} onClick={setDownloadType} />
-                    <TypePill value="all"       label="All Data"   icon={FileSpreadsheet} active={downloadType === "all"}      onClick={setDownloadType} />
+                    <TypePill value="monthly" label="Monthly" icon={Calendar} active={downloadType === "monthly"} onClick={setDownloadType} />
+                    <TypePill value="dateRange" label="Date Range" icon={ChevronRight} active={downloadType === "dateRange"} onClick={setDownloadType} />
+                    <TypePill value="all" label="All Data" icon={FileSpreadsheet} active={downloadType === "all"} onClick={setDownloadType} />
                   </div>
                 </div>
 
-                {/* Filters */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* MMU Filter */}
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">MMU Name</label>
                     <select
@@ -385,7 +367,6 @@ export default function Dashboard() {
                     </select>
                   </div>
 
-                  {/* Dynamic date filter */}
                   <AnimatePresence mode="wait">
                     {downloadType === "monthly" && (
                       <motion.div
@@ -416,10 +397,8 @@ export default function Dashboard() {
                   </AnimatePresence>
                 </div>
 
-                {/* Divider */}
                 <div className="border-t border-slate-100" />
 
-                {/* Download Button */}
                 <div className="flex justify-end">
                   <button
                     onClick={handleDownload}
@@ -430,7 +409,6 @@ export default function Dashboard() {
                         : "bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 hover:shadow-emerald-200 hover:shadow-xl hover:-translate-y-0.5"
                     }`}
                   >
-                    {/* shimmer on hover */}
                     {!loading && (
                       <span className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
                     )}

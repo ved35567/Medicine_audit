@@ -1,7 +1,7 @@
 import MedicineAudit from "@/models/MedicineAudit";
 import mongoose from "mongoose";
 
-export async function GET(request) {
+export async function GET() {
   try {
     // Connect to MongoDB
     if (!mongoose.connections[0].readyState) {

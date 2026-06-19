@@ -25,7 +25,7 @@ const getTodayIstRange = () => {
   return { dateKey, start, end };
 };
 
-export async function GET(request) {
+export async function GET() {
   try {
     if (!mongoose.connections[0].readyState) {
       await mongoose.connect(process.env.MONGODB_URI);

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import PageSkeleton from "@/components/skeletons/PageSkeleton";
 
 export default function MedicineAudit() {
   const [medicines, setMedicines] = useState([]);
@@ -35,7 +36,6 @@ export default function MedicineAudit() {
     auditor_name:"",
   });
 
-  // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -57,7 +57,6 @@ export default function MedicineAudit() {
         setMedicines(Array.isArray(medicinesData) ? medicinesData : []);
         setMmuDetails(Array.isArray(mmuData) ? mmuData : []);
 
-        // Initialize quantities for medicines
         if (Array.isArray(medicinesData) && medicinesData.length > 0) {
           const init = {};
           medicinesData.forEach((_, i) => {
@@ -122,7 +121,6 @@ export default function MedicineAudit() {
     clearInvalidField(name);
     setInvalidQuantityIndex(null);
 
-    // Validate date - only allow today's date
     if (name === "audit_date") {
       const todayDate = getTodayDate();
       if (value !== "" && value !== todayDate) {
@@ -160,8 +158,8 @@ export default function MedicineAudit() {
       }));
     }
   };
+
   const handleQuantityChange = (index, value) => {
-    // Only allow numeric input (0-9)
     const numericValue = value.replace(/[^0-9]/g, "");
     setQuantities((prev) => ({
       ...prev,
@@ -180,9 +178,8 @@ export default function MedicineAudit() {
     );
 
   const handleQuantityKeyDown = (e, index, viewType) => {
-    // Intercept 'Enter' key
     if (e.key === "Enter") {
-      e.preventDefault(); // Prevent accidental form submission
+      e.preventDefault();
 
       const currentFilteredIndex = filteredMedicines.findIndex(
         (m) => m.index === index,
@@ -195,7 +192,7 @@ export default function MedicineAudit() {
         );
         if (nextInput) {
           nextInput.focus();
-          nextInput.select(); // Highlight the text so they can overwrite easily
+          nextInput.select();
         }
       }
     }
@@ -207,8 +204,6 @@ export default function MedicineAudit() {
     setMessage({ type: "", text: "" });
 
     try {
-      // Collect medicine data with quantities (zeros allowed)
-      // Ensure quantities exist for all medicines
       if (!Array.isArray(medicines) || medicines.length === 0) {
         setMessage({
           type: "error",
@@ -224,7 +219,6 @@ export default function MedicineAudit() {
         physical_quantity: quantities[index] ?? 0,
       }));
 
-      // Verify every medicine has a valid quantity entered
       const hasEmptyQuantity = medicines.some(
         (_, index) =>
           quantities[index] === "" || quantities[index] === undefined,
@@ -244,7 +238,6 @@ export default function MedicineAudit() {
         return;
       }
 
-      // Validate all required fields
       const requiredFields = [
         "audit_date",
         "mmu_name",
@@ -276,7 +269,6 @@ export default function MedicineAudit() {
         return;
       }
 
-      // Validate that audit date is today only
       if (formData.audit_date !== getTodayDate()) {
         setMessage({
           type: "error",
@@ -307,7 +299,6 @@ export default function MedicineAudit() {
           text: "Audit data submitted successfully!",
         });
 
-        // Reset form
         setFormData({
           audit_date: "",
           mmu_name: "",
@@ -349,18 +340,16 @@ export default function MedicineAudit() {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 px-4">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-slate-800"></div>
-        <p className="mt-4 text-lg font-medium text-slate-600">
-          Loading audit data...
-        </p>
-      </div>
+      <PageSkeleton
+        title="Loading Medicine Audit"
+        description="Fetching medicines and MMU details for the audit form."
+        variant="form"
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-100 px-3 py-4 sm:px-5 md:px-6 lg:p-8">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -380,7 +369,6 @@ export default function MedicineAudit() {
         animate={{ opacity: 1, y: 0 }}
         className="mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:rounded-3xl"
       >
-        {/* Top Section */}
         <div className="bg-linear-to-r from-slate-900 to-slate-700 px-4 py-4 sm:px-6 sm:py-5">
           <h2 className="text-xl font-semibold text-white sm:text-2xl">
             Audit Details
@@ -388,7 +376,6 @@ export default function MedicineAudit() {
         </div>
 
         <form className="p-4 sm:p-6 lg:p-8" onSubmit={handleSubmit}>
-          {/* Message Display */}
           {message.text && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -408,9 +395,7 @@ export default function MedicineAudit() {
             </motion.div>
           )}
 
-          {/* Form Grid */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:gap-6">
-            {/* Date */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Audit Date
@@ -436,7 +421,6 @@ export default function MedicineAudit() {
               </div>
             </div>
 
-            {/* MMU Name */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 MMU Name
@@ -458,7 +442,6 @@ export default function MedicineAudit() {
                 ))}
               </select>
             </div>
-{/* Town Name */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Town
@@ -476,8 +459,6 @@ export default function MedicineAudit() {
               />
             </div>
 
-
-            {/* Vehicle Registration */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Vehicle Registration Number
@@ -502,7 +483,6 @@ export default function MedicineAudit() {
               </div>
             </div>
 
-            {/* APM Name */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 APM Name
@@ -520,7 +500,6 @@ export default function MedicineAudit() {
               />
             </div>
 
-            {/* Nodal Officer */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Nodal Officer Name
@@ -538,7 +517,6 @@ export default function MedicineAudit() {
               />
             </div>
 
-            {/* Doctor Name */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 MMU Doctor Name
@@ -556,7 +534,6 @@ export default function MedicineAudit() {
               />
             </div>
 
-            {/* Pharmacist */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 MMU Pharmacist Name
@@ -574,7 +551,6 @@ export default function MedicineAudit() {
               />
             </div>
 
-            {/* Vendor */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Vendor Name
@@ -592,7 +568,6 @@ export default function MedicineAudit() {
               />
             </div>
 
-            {/* Phase */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Phase
@@ -609,7 +584,6 @@ export default function MedicineAudit() {
                 className={`w-full rounded-xl border ${getFieldBorderClass("phase")} bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl`}
               />
             </div>
-            {/* Auditor Name */}
             <div>
               <label className="text-sm font-semibold text-slate-700 mb-2 block">
                 Auditor Name
@@ -626,11 +600,8 @@ export default function MedicineAudit() {
                 className={`w-full rounded-xl border ${getFieldBorderClass("auditor_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
             </div>
-
           </div>
 
-
-          {/* Table Section */}
           <div className="mt-10 border-t border-slate-200 pt-8 sm:mt-12 sm:pt-10">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
@@ -681,7 +652,6 @@ export default function MedicineAudit() {
                 </div>
               ) : (
                 <>
-                  {/* Mobile View (< md) */}
                   <div className="flex flex-col gap-3 p-3 md:hidden">
                     {filteredMedicines.map(({ medicine, index }) => (
                       <div
@@ -716,7 +686,6 @@ export default function MedicineAudit() {
                               handleQuantityChange(index, e.target.value)
                             }
                             onInput={(e) => {
-                              // Block non-numeric input
                               e.target.value = e.target.value.replace(/[^0-9]/g, "");
                             }}
                             onKeyDown={(e) =>
@@ -729,7 +698,6 @@ export default function MedicineAudit() {
                     ))}
                   </div>
 
-                  {/* Tablet/Desktop View (>= md) */}
                   <table className="hidden w-full border-collapse md:table">
                     <thead className="sticky top-0 z-20 bg-slate-900 text-white shadow-md">
                       <tr>
@@ -777,7 +745,6 @@ export default function MedicineAudit() {
                                 handleQuantityChange(index, e.target.value)
                               }
                               onInput={(e) => {
-                                // Block non-numeric input
                                 e.target.value = e.target.value.replace(/[^0-9]/g, "");
                               }}
                               onKeyDown={(e) =>
@@ -795,7 +762,6 @@ export default function MedicineAudit() {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
             <button
               type="submit"
@@ -808,7 +774,6 @@ export default function MedicineAudit() {
             >
               {loading ? "Submitting..." : "Submit Audit"}
             </button>
-           
           </div>
         </form>
       </motion.div>

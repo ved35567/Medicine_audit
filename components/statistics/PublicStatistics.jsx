@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import PageSkeleton from "@/components/skeletons/PageSkeleton";
 
 export default function PublicStatistics() {
   const [statistics, setStatistics] = useState({
@@ -34,10 +35,8 @@ export default function PublicStatistics() {
       }
     }
 
-    // Fetch immediately
     fetchStatistics();
 
-    // Refresh every 30 seconds
     const interval = setInterval(() => {
       fetchStatistics();
       setRefreshTime(new Date());
@@ -60,18 +59,16 @@ export default function PublicStatistics() {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg--to-br from-slate-50 to-slate-100 px-4">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-slate-800"></div>
-        <p className="mt-4 text-lg font-medium text-slate-600">
-          Loading statistics...
-        </p>
-      </div>
+      <PageSkeleton
+        title="Loading Statistics"
+        description="Pulling the latest audit metrics into view."
+        variant="dashboard"
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 px-3 py-4 sm:px-5 md:px-6 lg:p-8">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -95,7 +92,6 @@ export default function PublicStatistics() {
         </div>
       </motion.div>
 
-      {/* Daily Statistics */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -146,7 +142,6 @@ export default function PublicStatistics() {
         </div>
       </motion.div>
 
-      {/* Monthly Statistics */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -199,7 +194,6 @@ export default function PublicStatistics() {
         </div>
       </motion.div>
 
-      {/* Info Footer */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -207,7 +201,7 @@ export default function PublicStatistics() {
         className="mx-auto mt-8 w-full max-w-7xl text-center"
       >
         <p className="text-xs text-slate-500">
-          Statistics update automatically every 30 seconds • No login required
+          Statistics update automatically every 30 seconds â€¢ No login required
         </p>
       </motion.div>
     </div>
