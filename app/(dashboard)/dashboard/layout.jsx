@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Menu, LayoutDashboard, BriefcaseMedical, ClipboardList, FileSpreadsheet } from "lucide-react";
+import { Bell, X, Menu, LayoutDashboard, BriefcaseMedical, ClipboardList, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import DashboardSidebar from "@/components/layouts/DashboardSidebar";
 
 export default function DashboardLayout({ children }) {
@@ -22,6 +22,7 @@ export default function DashboardLayout({ children }) {
     { name: "Medicine Audit", href: "/dashboard/medicine_audit", icon: ClipboardList },
     { name: "Capture Application Stock", href: "/dashboard/capture_application_stock", icon: FileSpreadsheet },
     { name: "Medicine Audit Reports", href: "/dashboard/medicine_audit_report", icon: BriefcaseMedical },
+    { name: "Excess & Shortage", href: "/dashboard/excess_shortage", icon: AlertTriangle },
   ];
 
   useEffect(() => {

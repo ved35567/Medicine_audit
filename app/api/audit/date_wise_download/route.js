@@ -367,7 +367,7 @@ export async function GET(request) {
 
         // Difference
         sheet.getCell(`F${row}`).value = {
-          formula: `IF(OR(D${row}="",E${row}=""),"",D${row}-E${row})`,
+          formula: `IF(AND(D${row}="",E${row}=""),"",IF(D${row}="",0,D${row})-IF(E${row}="",0,E${row}))`,
         };
 
         // Expired Qty

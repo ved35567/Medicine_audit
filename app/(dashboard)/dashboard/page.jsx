@@ -216,7 +216,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard icon={Activity} label="Today's Audits" value={statistics.daily.auditCount} color="blue" delay={0.05} />
-          <StatCard icon={TrendingUp} label="Monthly Audits" value={statistics.monthly.auditCount} color="emerald" delay={0.1} />
+          <StatCard icon={TrendingUp} label="Monthly Audits" value={statistics.monthly.mmuAudited} color="emerald" delay={0.1} />
           <StatCard icon={Building2} label="MMUs This Month" value={statistics.monthly.mmuAudited} color="violet" delay={0.15} />
         </div>
 
