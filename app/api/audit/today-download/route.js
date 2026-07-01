@@ -368,16 +368,15 @@ export async function GET(request) {
           stockMap.get(medicine?.drug_code?.trim().toUpperCase()) ?? "";
         // Auto Filled
         sheet.getCell(`E${row}`).value = medicine?.physical_quantity ?? "";
-
-        // Difference
+ // Difference
         sheet.getCell(`F${row}`).value = {
-          formula: `IF(OR(D${row}="",E${row}=""),"",D${row}-E${row})`,
+          formula: `IF(AND(D${row}="",E${row}=""),"",IF(D${row}="",0,D${row})-IF(E${row}="",0,E${row}))`,
         };
 
         // Expired Qty
         sheet.getCell(`G${row}`).value = "";
 
-        // Remark
+         // Remark
         sheet.getCell(`H${row}`).value = {
           formula: `IFERROR(IF(OR(F${row}="",F${row}=0),"",IF(F${row}>0,"Shortage","Excess")),"")`,
         };
