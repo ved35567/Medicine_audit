@@ -1,5 +1,6 @@
 
 import type { Metadata, Viewport } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -73,7 +74,10 @@ export default function RootLayout({
       lang="en"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
