@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   FileSpreadsheet,
+  FileText,
   AlertCircle,
   CheckCircle,
   Building2,
@@ -88,7 +89,7 @@ export default function TodayReport() {
     return filenameMatch?.[1];
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (format = "excel") => {
     if (!isLoggedIn) {
       setMessage({
         type: "error",
@@ -101,16 +102,6 @@ export default function TodayReport() {
     setMessage({ type: "", text: "" });
 
     try {
-      const queryParams = new URLSearchParams();
-      if (!selectedMmu) {
-        setMessage({
-          type: "error",
-          text: "Please select MMU",
-        });
-
-        return;
-      }
-
       if (!selectedDate) {
         setMessage({
           type: "error",
@@ -120,15 +111,13 @@ export default function TodayReport() {
         return;
       }
 
-      if (selectedMmu) {
-        queryParams.append("mmu_name", selectedMmu);
-      }
-      if (selectedDate) {
-        queryParams.append("date", selectedDate);
-      }
-
+      const mmuQuery = selectedMmu
+        ? `&mmu_name=${encodeURIComponent(selectedMmu)}`
+        : "";
       const endpoint =
-        `/api/audit/date_wise_download?mmu_name=${encodeURIComponent(selectedMmu)}&date=${selectedDate}`;
+        format === "pdf"
+          ? `/api/audit/date_wise_pdf_download?date=${selectedDate}${mmuQuery}`
+          : `/api/audit/date_wise_download?date=${selectedDate}${mmuQuery}`;
 
       const response = await fetch(endpoint, {
         credentials: "include",
@@ -155,7 +144,7 @@ export default function TodayReport() {
       a.href = url;
       a.download =
         getFilenameFromResponse(response) ||
-        `${todayDate}_Medicine_Audit_Report_of_${selectedMmu || "all"}.xlsx`;
+        `${todayDate}_Medicine_Audit_Report_of_${selectedMmu || "all"}.${format === "pdf" ? "pdf" : "xlsx"}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -166,14 +155,15 @@ export default function TodayReport() {
         type: "success",
         text: auditCount
           ? `Downloaded ${auditCount} audit${auditCount === "1" ? "" : "s"} successfully.`
-          : "Excel file downloaded successfully.",
+          : `${format === "pdf" ? "PDF" : "Excel"} file downloaded successfully.`,
       });
     } catch (error) {
-      console.error("Error downloading Excel:", error);
+      console.error(`Error downloading ${format.toUpperCase()}:`, error);
       setMessage({
         type: "error",
         text:
-          error.message || "Error downloading Excel file. Please try again.",
+          error.message ||
+          `Error downloading ${format === "pdf" ? "PDF" : "Excel"} file. Please try again.`,
       });
     } finally {
       setLoading(false);
@@ -240,11 +230,11 @@ export default function TodayReport() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-8">
+    <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto w-full max-w-4xl lg:max-w-5xl"
+        className="mx-auto w-full max-w-[96rem]"
       >
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -272,7 +262,7 @@ export default function TodayReport() {
             variant="report"
           />
         ) : !isLoggedIn ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur">
             <h2 className="mb-4 text-xl font-semibold text-slate-800">
               Login to Access Downloads
             </h2>
@@ -342,7 +332,7 @@ export default function TodayReport() {
             </form>
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-800">
@@ -429,21 +419,36 @@ export default function TodayReport() {
             </div>
 
             <div className="mt-8 flex justify-end">
-              <button
-                onClick={handleDownload}
-                disabled={loading}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 ${
-                  loading
-                    ? "cursor-not-allowed bg-green-500"
-                    : "bg-green-600 hover:bg-green-700 hover:shadow-xl"
-                }`}
-              >
-                <FileSpreadsheet
-                  size={18}
-                  className={loading ? "animate-pulse" : ""}
-                />
-                {loading ? "Downloading..." : "Download Excel"}
-              </button>
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                <button
+                  onClick={() => handleDownload("excel")}
+                  disabled={loading}
+                  className={`flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 ${
+                    loading
+                      ? "cursor-not-allowed bg-green-500"
+                      : "bg-green-600 hover:bg-green-700 hover:shadow-xl"
+                  }`}
+                >
+                  <FileSpreadsheet
+                    size={18}
+                    className={loading ? "animate-pulse" : ""}
+                  />
+                  {loading ? "Downloading..." : "Download Excel"}
+                </button>
+
+                <button
+                  onClick={() => handleDownload("pdf")}
+                  disabled={loading}
+                  className={`flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 ${
+                    loading
+                      ? "cursor-not-allowed bg-slate-500"
+                      : "bg-slate-800 hover:bg-slate-900 hover:shadow-xl"
+                  }`}
+                >
+                  <FileText size={18} className={loading ? "animate-pulse" : ""} />
+                  {loading ? "Downloading..." : "Download PDF"}
+                </button>
+              </div>
             </div>
           </div>
         )}

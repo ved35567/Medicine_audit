@@ -250,7 +250,7 @@ export default function ApplicationStockPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-[96rem] flex-col gap-6">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
             <motion.div
@@ -366,7 +366,7 @@ export default function ApplicationStockPage() {
                 <SectionHeader
                   eyebrow="Step 2"
                   title="Audit verification"
-                  description="The system checks today's audit record for the selected MMU and unlocks the upload area only after a match is found."
+                  description="The system checks the daily audit record for the selected MMU and unlocks the upload area only after a match is found."
                   icon={ShieldCheck}
                 />
 
@@ -377,7 +377,7 @@ export default function ApplicationStockPage() {
                       <div>
                         <p className="font-semibold text-slate-800">Select an MMU to continue</p>
                         <p className="mt-1 text-sm leading-6 text-slate-500">
-                          Once you choose an MMU, we'll verify whether the physical audit
+                          Once you choose an MMU, we will verify whether the physical audit
                           exists for today.
                         </p>
                       </div>
@@ -388,7 +388,7 @@ export default function ApplicationStockPage() {
                     <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-blue-700">
                       <Loader2 className="mt-0.5 shrink-0 animate-spin" size={18} />
                       <div>
-                        <p className="font-semibold">Checking today's audit</p>
+                        <p className="font-semibold">Checking the current audit</p>
                         <p className="mt-1 text-sm leading-6 text-blue-700/80">
                           Please wait while we confirm the audit record for {selectedLabel}.
                         </p>
@@ -628,4 +628,3 @@ export default function ApplicationStockPage() {
     </div>
   );
 }
-

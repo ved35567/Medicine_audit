@@ -128,6 +128,19 @@ export async function GET(request) {
       ]),
     );
 
+    const audit = audits.find((item) =>
+      stockByAuditId.has(String(item._id)),
+    );
+
+    if (!audit) {
+      return NextResponse.json(
+        {
+          error: `Application stock is not imported for ${mmuName} on ${selectedDate}`,
+        },
+        { status: 404 },
+      );
+    }
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Excess Shortage");
 
@@ -183,8 +196,8 @@ export async function GET(request) {
     let serialNo = 1;
     const statusLabel = capitalize(status);
 
-    for (const audit of audits) {
-      const stockImport = stockByAuditId.get(String(audit._id));
+    for (const auditRecord of [audit]) {
+      const stockImport = stockByAuditId.get(String(auditRecord._id));
 
       const stockMap = new Map(
         (stockImport?.medicines || []).map((item) => [
@@ -194,7 +207,9 @@ export async function GET(request) {
       );
 
       const matchingMedicines = [];
-      const medicines = Array.isArray(audit.medicines) ? audit.medicines : [];
+      const medicines = Array.isArray(auditRecord.medicines)
+        ? auditRecord.medicines
+        : [];
 
       for (const medicine of medicines) {
         const applicationStock = Number(
@@ -219,7 +234,7 @@ export async function GET(request) {
 
         const difference = applicationStock - physicalStock;
 
-        if (Math.abs(difference) >= 50) {
+        if (Math.abs(difference) >= 100) {
           matchingMedicines.push(`${medicine.medicine_name}:${Math.abs(difference)}`);
         }
       } // end for (const medicine of medicines)
@@ -232,7 +247,7 @@ export async function GET(request) {
 
       row.values = {
         sno: serialNo,
-        mmu_no: audit.mmu_name,
+        mmu_no: auditRecord.mmu_name,
         status: statusLabel,
       };
 

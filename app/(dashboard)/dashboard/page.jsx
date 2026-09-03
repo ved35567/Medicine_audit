@@ -68,6 +68,7 @@ function TypePill({ value, label, icon: Icon, active, onClick }) {
 }
 
 export default function Dashboard() {
+  const totalMmus = 120;
   const [mmuDetails, setMmuDetails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -85,6 +86,7 @@ export default function Dashboard() {
     daily: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
     monthly: { mmuAudited: 0, medicineCount: 0, auditCount: 0 },
   });
+  const remainingMmus = Math.max(totalMmus - (statistics.monthly.mmuAudited || 0), 0);
 
   useEffect(() => {
     fetch("/api/mmu_details")
@@ -189,8 +191,8 @@ export default function Dashboard() {
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 transition-all duration-200";
 
   return (
-    <div className="min-h-screen bg-slate-200 px-4 py-8 sm:px-8">
-      <div className="mx-auto w-full max-w-4xl space-y-8">
+    <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+      <div className="mx-auto w-full max-w-[96rem] space-y-8 xl:space-y-10">
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -214,10 +216,10 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 xl:gap-6">
           <StatCard icon={Activity} label="Today's Audits" value={statistics.daily.auditCount} color="blue" delay={0.05} />
-          <StatCard icon={TrendingUp} label="Monthly Audits" value={statistics.monthly.mmuAudited} color="emerald" delay={0.1} />
-          <StatCard icon={Building2} label="MMUs This Month" value={statistics.monthly.mmuAudited} color="violet" delay={0.15} />
+          <StatCard icon={TrendingUp} label="Remains Audit" value={remainingMmus} color="emerald" delay={0.1} />
+          <StatCard icon={Building2} label="Total Audited This Month" value={statistics.monthly.mmuAudited || 0} color="violet" delay={0.15} />
         </div>
 
         <AnimatePresence mode="wait">

@@ -111,14 +111,8 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const mmuName = searchParams.get("mmu_name");
+    const mmuName = searchParams.get("mmu_name")?.trim();
     const selectedDate = searchParams.get("date");
-    if (!mmuName) {
-      return NextResponse.json(
-        { error: "MMU Name is required" },
-        { status: 400 },
-      );
-    }
     if (!selectedDate) {
       return NextResponse.json(
         {
@@ -136,12 +130,15 @@ export async function GET(request) {
 
     end.setDate(end.getDate() + 1);
     const query = {
-      mmu_name: mmuName.trim(),
       createdAt: {
         $gte: start,
         $lt: end,
       },
     };
+
+    if (mmuName) {
+      query.mmu_name = mmuName;
+    }
 
     const monthStart = new Date(
       `${selectedDate.slice(0, 7)}-01T00:00:00+05:30`,
@@ -156,16 +153,46 @@ export async function GET(request) {
     if (!audits.length) {
       return NextResponse.json(
         {
-          error: `No audits found for ${mmuName} on ${selectedDate}`,
+          error: `No audits found${mmuName ? ` for ${mmuName}` : ""} on ${selectedDate}`,
         },
         { status: 404 },
       );
     }
 
+    const stockImports = await StockImport.find({
+      audit_id: {
+        $in: audits.map((audit) => audit._id),
+      },
+    }).lean();
+
+    const stockByAuditId = new Map(
+      stockImports.map((stockImport) => [
+        String(stockImport.audit_id),
+        stockImport,
+      ]),
+    );
+
+    const selectedAudits = [];
+    const selectedByMmu = new Map();
+
+    for (const audit of audits) {
+      const current = selectedByMmu.get(audit.mmu_name);
+      const hasStock = stockByAuditId.has(String(audit._id));
+      const currentHasStock = current
+        ? stockByAuditId.has(String(current._id))
+        : false;
+
+      if (!current || (hasStock && !currentHasStock)) {
+        selectedByMmu.set(audit.mmu_name, audit);
+      }
+    }
+
+    selectedAudits.push(...selectedByMmu.values());
+
     const workbook = new ExcelJS.Workbook();
     const usedSheetNames = new Set();
 
-    for (const audit of audits) {
+    for (const audit of selectedAudits) {
       // Monthly Auditor Logic
       const monthlyCount = await MedicineAudit.countDocuments({
         createdAt: {
@@ -189,9 +216,7 @@ export async function GET(request) {
       );
 
       addLogo(workbook, sheet);
-      const stockImport = await StockImport.findOne({
-        audit_id: audit._id,
-      }).lean();
+      const stockImport = stockByAuditId.get(String(audit._id));
 
       const stockMap = new Map(
         (stockImport?.medicines || []).map((item) => [
@@ -479,7 +504,7 @@ export async function GET(request) {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
-        "X-Audit-Count": String(audits.length),
+        "X-Audit-Count": String(selectedAudits.length),
         "X-Report-Date": formatDateOnly(start),
       },
     });

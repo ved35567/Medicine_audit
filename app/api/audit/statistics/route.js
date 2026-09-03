@@ -1,6 +1,33 @@
 import MedicineAudit from "@/models/MedicineAudit";
 import mongoose from "mongoose";
 
+const getAuditDateKey = (audit) => {
+  const value = audit.audit_date || audit.createdAt;
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
+};
+
+const getUniqueAudits = (audits, includeDate) => {
+  const uniqueAudits = new Map();
+
+  for (const audit of audits) {
+    const key = includeDate
+      ? `${audit.mmu_name}|${getAuditDateKey(audit)}`
+      : audit.mmu_name;
+
+    if (!uniqueAudits.has(key)) {
+      uniqueAudits.set(key, audit);
+    }
+  }
+
+  return [...uniqueAudits.values()];
+};
+
 export async function GET() {
   try {
     // Connect to MongoDB
@@ -18,9 +45,12 @@ export async function GET() {
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
 
     // Daily Statistics
-    const dailyAudits = await MedicineAudit.find({
-      createdAt: { $gte: today, $lt: tomorrow },
-    });
+    const dailyAudits = getUniqueAudits(
+      await MedicineAudit.find({
+        createdAt: { $gte: today, $lt: tomorrow },
+      }).sort({ createdAt: -1 }),
+      false,
+    );
 
     const dailyMmuCount = new Set(dailyAudits.map((a) => a.mmu_name)).size;
     let dailyMedicineCount = 0;
@@ -33,9 +63,12 @@ export async function GET() {
     });
 
     // Monthly Statistics
-    const monthlyAudits = await MedicineAudit.find({
-      createdAt: { $gte: monthStart, $lt: monthEnd },
-    });
+    const monthlyAudits = getUniqueAudits(
+      await MedicineAudit.find({
+        createdAt: { $gte: monthStart, $lt: monthEnd },
+      }).sort({ createdAt: -1 }),
+      true,
+    );
 
     const monthlyMmuCount = new Set(monthlyAudits.map((a) => a.mmu_name)).size;
     let monthlyMedicineCount = 0;

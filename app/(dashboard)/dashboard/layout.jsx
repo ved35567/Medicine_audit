@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, X, Menu, LayoutDashboard, BriefcaseMedical, ClipboardList, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import DashboardSidebar from "@/components/layouts/DashboardSidebar";
 
+
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -86,9 +87,9 @@ export default function DashboardLayout({ children }) {
 
   return (
     <>
-      <div className="lg:hidden fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 z-50 flex w-full items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-xl">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/5 ring-1 ring-slate-200">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950 ring-1 ring-slate-200/80">
             <Image
               src="/mmu-logo.png"
               alt="MMU Logo"
@@ -98,11 +99,11 @@ export default function DashboardLayout({ children }) {
               priority
             />
           </div>
-          <h1 className="text-base font-bold text-slate-800">MMU Panel</h1>
+          <h1 className="text-base font-bold text-slate-900">MMU Panel</h1>
         </div>
         <button
           onClick={() => setOpen(!open)}
-          className="relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-all duration-200"
+          className="relative rounded-xl bg-slate-100 p-2 transition-all duration-200 hover:bg-slate-200"
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -121,7 +122,7 @@ export default function DashboardLayout({ children }) {
         </button>
       </div>
 
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 xl:w-72 bg-linear-to-b from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl flex-col">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 xl:w-72 flex-col bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-white shadow-2xl shadow-slate-950/30">
         <DashboardSidebar
           onLinkClick={undefined}
           navItems={navItems}
@@ -149,7 +150,7 @@ export default function DashboardLayout({ children }) {
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 z-50 h-screen w-[min(18rem,calc(100vw-3rem))] bg-linear-to-b from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl lg:hidden flex flex-col"
+              className="fixed left-0 top-0 z-50 flex h-screen w-[min(18rem,calc(100vw-3rem))] flex-col bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-white shadow-2xl shadow-slate-950/30 lg:hidden"
             >
               <DashboardSidebar
                 onLinkClick={() => setOpen(false)}
@@ -166,7 +167,7 @@ export default function DashboardLayout({ children }) {
         )}
       </AnimatePresence>
 
-      <main className="min-h-screen w-full overflow-x-hidden bg-slate-100 pt-16 lg:pt-0 lg:pl-64 xl:pl-72">
+      <main className="min-h-screen w-full overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.08),transparent_24%),radial-gradient(circle_at_top_right,rgba(15,23,42,0.06),transparent_20%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] pt-16 lg:pt-0 lg:pl-64 xl:pl-72">
         {children}
       </main>
 
@@ -178,9 +179,9 @@ export default function DashboardLayout({ children }) {
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.2 } }}
-              className="flex items-start gap-3.5 rounded-2xl border border-slate-100 bg-white p-4 shadow-2xl shadow-black/10"
+              className="flex items-start gap-3.5 rounded-3xl border border-slate-200/80 bg-white/95 p-4 shadow-2xl shadow-slate-950/10 backdrop-blur"
             >
-              <div className="shrink-0 h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
                 <Bell size={16} className="text-emerald-600" />
               </div>
               <div className="flex-1 min-w-0 pt-0.5">
@@ -192,7 +193,7 @@ export default function DashboardLayout({ children }) {
               </div>
               <button
                 onClick={() => setNotifications((prev) => prev.filter((n) => n.id !== notif.id))}
-                className="shrink-0 text-slate-300 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1 transition-all duration-150"
+                className="shrink-0 rounded-lg p-1 text-slate-300 transition-all duration-150 hover:bg-slate-100 hover:text-slate-600"
               >
                 <X size={14} />
               </button>

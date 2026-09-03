@@ -238,11 +238,11 @@ export default function ExcessShortageReport() {
     "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 transition-all duration-200";
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-8">
+    <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto w-full max-w-4xl lg:max-w-5xl"
+        className="mx-auto w-full max-w-[96rem]"
       >
         {/* Header section */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -273,7 +273,7 @@ export default function ExcessShortageReport() {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-3xl bg-white border border-slate-100 shadow-xl overflow-hidden"
+            className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur"
           >
             <div className="h-1.5 w-full bg-linear-to-r from-slate-700 via-slate-500 to-slate-700" />
             <div className="p-6 sm:p-8">

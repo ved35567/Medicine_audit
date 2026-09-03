@@ -349,11 +349,11 @@ export default function MedicineAudit() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 px-3 py-4 sm:px-5 md:px-6 lg:p-8">
+    <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto mb-5 w-full max-w-7xl sm:mb-8"
+        className="mx-auto mb-5 w-full max-w-[96rem] sm:mb-8"
       >
         <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl lg:text-4xl">
           Medicine Audit Form
@@ -367,9 +367,9 @@ export default function MedicineAudit() {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:rounded-3xl"
+        className="mx-auto w-full max-w-[96rem] overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur sm:rounded-[2.25rem]"
       >
-        <div className="bg-linear-to-r from-slate-900 to-slate-700 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="bg-linear-to-r from-slate-950 via-slate-900 to-slate-800 px-4 py-4 sm:px-6 sm:py-5">
           <h2 className="text-xl font-semibold text-white sm:text-2xl">
             Audit Details
           </h2>
