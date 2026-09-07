@@ -42,17 +42,15 @@ export async function POST(req) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const audits = await MedicineAudit.find({
+    const audit = await MedicineAudit.findOne({
       mmu_name,
       audit_date: {
         $gte: today,
         $lt: tomorrow,
       },
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    });
 
-    if (!audits.length) {
+    if (!audit) {
       return NextResponse.json(
         {
           success: false,
@@ -62,27 +60,9 @@ export async function POST(req) {
       );
     }
 
-    const existingImports = await StockImport.find({
-      audit_id: {
-        $in: audits.map((item) => item._id),
-      },
-    }).lean();
-
-    const importsByAuditId = new Map(
-      existingImports.map((item) => [
-        String(item.audit_id),
-        item,
-      ]),
-    );
-
-    const audit =
-      audits.find((item) =>
-        importsByAuditId.has(String(item._id)),
-      ) || audits[0];
-
-    const existingImport = importsByAuditId.get(
-      String(audit._id),
-    );
+    const existingImport = await StockImport.findOne({
+      audit_id: audit._id,
+    });
 
     if (existingImport) {
       return NextResponse.json(
