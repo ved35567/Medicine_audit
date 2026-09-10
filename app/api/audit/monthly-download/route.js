@@ -92,21 +92,24 @@ export async function GET(request) {
       { header: "Medicine Name", key: "medicine_name", width: 25 },
       { header: "Application Stock", key: "application_stock", width: 18 }, // ✅ New column
       { header: "Physical Quantity", key: "physical_quantity", width: 15 },
+      { header: "Expired Quantity", key: "expired_quantity", width: 15 },
     ];
 
     // Style header
     const headerRow = auditSheet.getRow(1);
-    headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
-    headerRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1E293B" },
-    };
-    headerRow.alignment = {
-      horizontal: "center",
-      vertical: "center",
-      wrapText: true,
-    };
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFF" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "1E293B" },
+      };
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "center",
+        wrapText: true,
+      };
+    });
 
     // Add audit data
     let rowIndex = 2;
@@ -144,23 +147,26 @@ export async function GET(request) {
             medicine_name: medicine.medicine_name,
             application_stock: matchedMedicine?.application_stock ?? "N/A", // ✅
             physical_quantity: medicine.physical_quantity,
+            expired_quantity: medicine.expired_quantity ?? 0,
           };
 
-          row.alignment = { horizontal: "center", vertical: "center" };
-          row.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" },
-          };
-
-          if (auditIndex % 2 === 0) {
-            row.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "F1F5F9" },
+          row.eachCell((cell) => {
+            cell.alignment = { horizontal: "center", vertical: "center" };
+            cell.border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
             };
-          }
+
+            if (auditIndex % 2 === 0) {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "F1F5F9" },
+              };
+            }
+          });
 
           rowIndex++;
         });

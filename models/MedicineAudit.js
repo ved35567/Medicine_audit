@@ -17,6 +17,11 @@ const medicineAuditItemSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    expired_quantity: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
   },
   { _id: false }
 );

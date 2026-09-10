@@ -2,6 +2,14 @@ import mongoose from "mongoose";
 import MedicineAudit from "@/models/MedicineAudit";
 import { NextResponse } from "next/server";
 
+const formatAuditTime = (date) =>
+  new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(date));
+
 // Helper to get today's start and end in IST
 const getTodayIstRange = () => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -47,11 +55,7 @@ export async function GET() {
     // Include formatted time string for hover panel (keep original createdAt)
     const formattedAudits = audits.map((a) => ({
       ...a,
-      time: new Date(a.createdAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
+      time: formatAuditTime(a.createdAt),
     }));
 
     return NextResponse.json(

@@ -396,7 +396,7 @@ export async function GET(request) {
         };
 
         // Expired Qty
-        sheet.getCell(`G${row}`).value = "";
+        sheet.getCell(`G${row}`).value = medicine?.expired_quantity ?? 0;
 
         // Remark
         sheet.getCell(`H${row}`).value = {

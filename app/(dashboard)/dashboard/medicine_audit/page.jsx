@@ -22,6 +22,7 @@ export default function MedicineAudit() {
   const [invalidQuantityIndex, setInvalidQuantityIndex] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [quantities, setQuantities] = useState({});
+  const [expiredQuantities, setExpiredQuantities] = useState({});
   const [formData, setFormData] = useState({
     audit_date: "",
     mmu_name: "",
@@ -63,6 +64,7 @@ export default function MedicineAudit() {
             init[i] = "";
           });
           setQuantities(init);
+          setExpiredQuantities({});
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -167,6 +169,14 @@ export default function MedicineAudit() {
     }));
   };
 
+  const handleExpiredQuantityChange = (index, value) => {
+    const numericValue = value.replace(/[^0-9]/g, "");
+    setExpiredQuantities((prev) => ({
+      ...prev,
+      [index]: numericValue === "" ? "" : parseInt(numericValue, 10),
+    }));
+  };
+
   const filteredMedicines = medicines
     .map((medicine, index) => ({ medicine, index }))
     .filter(
@@ -217,6 +227,7 @@ export default function MedicineAudit() {
         drug_code: medicine.drug_code,
         medicine_name: medicine.medicine_name,
         physical_quantity: quantities[index] ?? 0,
+        expired_quantity: expiredQuantities[index] ?? 0,
       }));
 
       const hasEmptyQuantity = medicines.some(
@@ -676,23 +687,41 @@ export default function MedicineAudit() {
                           <label className="text-sm font-semibold text-slate-700">
                             Physical Qty:
                           </label>
-                          <input
-                            id={`qty-mob-${index}`}
-                            type="number"
-                            placeholder="0"
-                            min="0"
-                            value={quantities[index] ?? ""}
-                            onChange={(e) =>
-                              handleQuantityChange(index, e.target.value)
-                            }
-                            onInput={(e) => {
-                              e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                            }}
-                            onKeyDown={(e) =>
-                              handleQuantityKeyDown(e, index, "mob")
-                            }
-                            className={getQuantityInputClasses(index)}
-                          />
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <input
+                              id={`qty-mob-${index}`}
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={quantities[index] ?? ""}
+                              onChange={(e) =>
+                                handleQuantityChange(index, e.target.value)
+                              }
+                              onInput={(e) => {
+                                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                              }}
+                              onKeyDown={(e) =>
+                                handleQuantityKeyDown(e, index, "mob")
+                              }
+                              className={getQuantityInputClasses(index)}
+                            />
+                            <label className="self-center text-sm font-semibold text-slate-700">
+                              Expired Qty:
+                            </label>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={expiredQuantities[index] ?? ""}
+                              onChange={(e) =>
+                                handleExpiredQuantityChange(index, e.target.value)
+                              }
+                              onInput={(e) => {
+                                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                              }}
+                              className={getQuantityInputClasses(index)}
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -712,6 +741,9 @@ export default function MedicineAudit() {
                         </th>
                         <th className="w-56 px-4 py-4 text-center font-semibold">
                           Physical Quantity
+                        </th>
+                        <th className="w-56 px-4 py-4 text-center font-semibold">
+                          Expired Quantity
                         </th>
                       </tr>
                     </thead>
@@ -750,6 +782,21 @@ export default function MedicineAudit() {
                               onKeyDown={(e) =>
                                 handleQuantityKeyDown(e, index, "desk")
                               }
+                              className={getQuantityInputClasses(index)}
+                            />
+                          </td>
+                          <td className="bg-amber-50/30 px-4 py-3 text-center transition-colors group-hover:bg-amber-50/60">
+                            <input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={expiredQuantities[index] ?? ""}
+                              onChange={(e) =>
+                                handleExpiredQuantityChange(index, e.target.value)
+                              }
+                              onInput={(e) => {
+                                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                              }}
                               className={getQuantityInputClasses(index)}
                             />
                           </td>

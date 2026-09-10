@@ -849,7 +849,7 @@ const calculateMedicineValues = (
   const physical =
     medicine?.physical_quantity ??
     "";
-
+ 
   let difference = "";
 
   if (
@@ -960,7 +960,7 @@ const drawMedicineRow = (
       wrap: true,
     },
     {
-      value: "",
+      value: medicine?.expired_quantity ?? 0,
       width: COL_EXPIRED,
       align: "center",
     },

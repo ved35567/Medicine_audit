@@ -7,6 +7,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, X, Menu, LayoutDashboard, BriefcaseMedical, ClipboardList, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import DashboardSidebar from "@/components/layouts/DashboardSidebar";
 
+const formatAuditTime = (date) =>
+  new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(date));
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
@@ -40,7 +47,7 @@ export default function DashboardLayout({ children }) {
         const newNotifs = newAudits.map((audit) => ({
           id: audit._id || Math.random().toString(),
           mmu_name: audit.mmu_name,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          time: formatAuditTime(audit.createdAt),
         }));
 
         setNotifications((prev) => [...prev, ...newNotifs]);
@@ -70,7 +77,7 @@ export default function DashboardLayout({ children }) {
             audits.map((a) => ({
               id: a._id || Math.random().toString(),
               mmu_name: a.mmu_name,
-              time: a.time || new Date(a.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              time: a.time || formatAuditTime(a.createdAt),
             }))
           );
           setRecentFetched(true);
