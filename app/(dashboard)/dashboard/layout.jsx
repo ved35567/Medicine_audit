@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }) {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Medicine Audit", href: "/dashboard/medicine_audit", icon: ClipboardList },
+    { name: "Medicine Audit Form", href: "/dashboard/medicine_audit", icon: ClipboardList },
     { name: "Capture Application Stock", href: "/dashboard/capture_application_stock", icon: FileSpreadsheet },
     { name: "Medicine Audit Reports", href: "/dashboard/medicine_audit_report", icon: BriefcaseMedical },
     { name: "Excess & Shortage", href: "/dashboard/excess_shortage", icon: AlertTriangle },
