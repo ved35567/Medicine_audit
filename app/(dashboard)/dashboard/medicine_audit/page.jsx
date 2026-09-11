@@ -103,8 +103,8 @@ export default function MedicineAudit() {
 
   const getQuantityInputClasses = (index) =>
     invalidQuantityIndex === index
-      ? "mx-auto block w-32 rounded-xl border-2 border-red-500 px-3 py-2.5 text-center text-lg font-bold text-slate-800 outline-none transition-all hover:border-red-500 focus:border-red-700 focus:ring-4 focus:ring-red-200"
-      : "mx-auto block w-32 rounded-xl border-2 border-slate-200 px-3 py-2.5 text-center text-lg font-bold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10";
+      ? "mx-0 block w-20 rounded-xl border-2 border-red-500 px-2 py-2 text-center text-base font-bold text-slate-800 outline-none transition-all hover:border-red-500 focus:border-red-700 focus:ring-4 focus:ring-red-200 md:mx-auto"
+      : "mx-0 block w-20 rounded-xl border-2 border-slate-200 px-2 py-2 text-center text-base font-bold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 md:mx-auto";
 
   const focusFirstInvalidQuantity = (index) => {
     const deskInput = document.getElementById(`qty-desk-${index}`);
@@ -606,7 +606,7 @@ export default function MedicineAudit() {
                 name="auditor_name"
                 value={formData.auditor_name}
                 onChange={handleFormChange}
-                placeholder="Enter TPA Auditor name"
+                placeholder="Dr Full name"
                 required
                 className={`w-full rounded-xl border ${getFieldBorderClass("auditor_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
@@ -663,11 +663,11 @@ export default function MedicineAudit() {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col gap-3 p-3 md:hidden">
+                  <div className="flex w-full flex-col gap-3 p-2 sm:p-3 md:hidden">
                     {filteredMedicines.map(({ medicine, index }) => (
                       <div
                         key={index}
-                        className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-slate-800"
+                        className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-slate-800"
                       >
                         <div className="absolute left-0 top-0 h-full w-1.5 bg-slate-800"></div>
                         <div className="mb-3 flex items-center justify-between pl-2">
@@ -683,11 +683,11 @@ export default function MedicineAudit() {
                             {medicine.medicine_name}
                           </h3>
                         </div>
-                        <div className="-mb-4 -mx-4 flex items-center justify-between bg-slate-50/80 px-4 pb-4 pt-4 pl-6 border-t border-slate-100">
-                          <label className="text-sm font-semibold text-slate-700">
-                            Physical Qty:
-                          </label>
-                          <div className="flex flex-wrap justify-end gap-2">
+                        <div className="-mx-4 -mb-4 mt-4 space-y-2 border-t border-slate-100 bg-slate-50/80 px-4 pb-4 pt-3 pl-6">
+                          <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+                            <label className="text-sm font-semibold text-slate-700">
+                              Physical Qty <span className="text-red-500">*</span>:
+                            </label>
                             <input
                               id={`qty-mob-${index}`}
                               type="number"
@@ -705,7 +705,9 @@ export default function MedicineAudit() {
                               }
                               className={getQuantityInputClasses(index)}
                             />
-                            <label className="self-center text-sm font-semibold text-slate-700">
+                          </div>
+                          <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+                            <label className="text-sm font-semibold text-slate-700">
                               Expired Qty:
                             </label>
                             <input
@@ -739,10 +741,10 @@ export default function MedicineAudit() {
                         <th className="px-4 py-4 text-left font-semibold">
                           Medicine Name
                         </th>
-                        <th className="w-56 px-4 py-4 text-center font-semibold">
+                        <th className="w-40 px-2 py-4 text-center font-semibold">
                           Physical Quantity
                         </th>
-                        <th className="w-56 px-4 py-4 text-center font-semibold">
+                        <th className="w-40 px-2 py-4 text-center font-semibold">
                           Expired Quantity
                         </th>
                       </tr>
@@ -766,7 +768,7 @@ export default function MedicineAudit() {
                               {medicine.medicine_name}
                             </span>
                           </td>
-                          <td className="bg-slate-50/30 px-4 py-3 text-center transition-colors group-hover:bg-slate-100/50">
+                          <td className="bg-slate-50/30 px-2 py-3 text-center transition-colors group-hover:bg-slate-100/50">
                             <input
                               id={`qty-desk-${index}`}
                               type="number"
@@ -785,7 +787,7 @@ export default function MedicineAudit() {
                               className={getQuantityInputClasses(index)}
                             />
                           </td>
-                          <td className="bg-amber-50/30 px-4 py-3 text-center transition-colors group-hover:bg-amber-50/60">
+                          <td className="bg-amber-50/30 px-2 py-3 text-center transition-colors group-hover:bg-amber-50/60">
                             <input
                               type="number"
                               placeholder="0"
