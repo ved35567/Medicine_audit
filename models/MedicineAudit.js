@@ -37,12 +37,11 @@ const medicineAuditSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    auditor_name:{
+    auditor_name: {
       type: String,
-      required: true,
       trim: true,
-    }
-,
+      default: "",
+    },
     town: {
       type: String,
       required: true,

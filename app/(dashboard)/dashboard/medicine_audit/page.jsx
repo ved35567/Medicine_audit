@@ -34,7 +34,6 @@ export default function MedicineAudit() {
     mmu_pharmacist_name: "",
     vendor_name: "",
     phase: "",
-    auditor_name:"",
   });
 
   const getTodayDate = () => {
@@ -260,7 +259,6 @@ export default function MedicineAudit() {
         "mmu_pharmacist_name",
         "vendor_name",
         "phase",
-        "auditor_name",
       ];
       const missingFields = requiredFields.filter(
         (field) => !formData[field],
@@ -321,7 +319,6 @@ export default function MedicineAudit() {
           mmu_pharmacist_name: "",
           vendor_name: "",
           phase: "",
-          auditor_name:"",
         });
         setInvalidFields({});
         setInvalidQuantityIndex(null);
@@ -593,22 +590,6 @@ export default function MedicineAudit() {
                 required
                 readOnly
                 className={`w-full rounded-xl border ${getFieldBorderClass("phase")} bg-slate-100 px-4 py-3 text-slate-700 outline-none sm:rounded-2xl`}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-700 mb-2 block">
-                Auditor Name
-              </label>
-
-              <input
-                type="text"
-                id="auditor_name"
-                name="auditor_name"
-                value={formData.auditor_name}
-                onChange={handleFormChange}
-                placeholder="Dr Full name"
-                required
-                className={`w-full rounded-xl border ${getFieldBorderClass("auditor_name")} px-4 py-3 outline-none sm:rounded-2xl`}
               />
             </div>
           </div>

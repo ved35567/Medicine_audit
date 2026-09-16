@@ -413,7 +413,7 @@ export async function GET(request) {
       // Footer
       let row = tableEndRow + 3;
 
-      sheet.getCell(`C${row + 2}`).value = `Dr.${audit.auditor_name}`;
+      sheet.getCell(`C${row + 2}`).value = audit.auditor_name;
       sheet.getCell(`C${row + 2}`).alignment = { horizontal: "center" };
       sheet.getCell(`C${row + 2}`).font = {
         name: "Calibri",

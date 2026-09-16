@@ -24,7 +24,6 @@ export async function POST(request) {
       mmu_pharmacist_name: data.mmu_pharmacist_name,
       vendor_name: data.vendor_name,
       phase: data.phase,
-      auditor_name: data.auditor_name,
       medicines: data.medicines, // contains drug_code, medicine_name, and physical_quantity
     });
 

@@ -26,6 +26,12 @@ const stockImportSchema = new mongoose.Schema(
       unique: true,
     },
 
+    auditor_name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     medicines: {
       type: [stockItemSchema],
       required: true,

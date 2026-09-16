@@ -67,3 +67,21 @@ body::before {
   background: rgba(51, 65, 85, 0.6);
   background-clip: padding-box;
 }
+
+.audit-edit-field {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.5rem;
+  border: 1px solid rgb(203 213 225);
+  border-radius: 0.75rem;
+  background: white;
+  padding: 0.75rem 0.875rem;
+  color: rgb(30 41 59);
+  outline: none;
+}
+
+.audit-edit-field:focus {
+  border-color: rgb(51 65 85);
+  box-shadow: 0 0 0 4px rgb(241 245 249);
+}

@@ -15,6 +15,7 @@ export async function POST(req) {
 
     const pdf = formData.get("pdf");
     const mmu_name = formData.get("mmu_name");
+    const auditor_name = String(formData.get("auditor_name") || "").trim();
 
     if (!pdf) {
       return NextResponse.json(
@@ -33,6 +34,16 @@ export async function POST(req) {
           message: "MMU Name is required",
         },
         { status: 400 }
+      );
+    }
+
+    if (!auditor_name) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Auditor name is required",
+        },
+        { status: 400 },
       );
     }
 
@@ -217,6 +228,9 @@ console.log(
     // Save
     // ===============================
 
+    audit.auditor_name = auditor_name;
+    await audit.save();
+
     const stockImport = await StockImport.create({
       audit_id: audit._id,
       medicines: matchedMedicines,
@@ -224,12 +238,13 @@ console.log(
 
     return NextResponse.json({
       success: true,
+      auditId: audit._id,
       stockImportId: stockImport._id,
       totalExtracted: uniqueMedicines.length,
       totalMatched: matchedMedicines.length,
       totalAuditMedicines: audit.medicines.length,
       message:
-        "Application stock imported successfully.",
+        "Application stock imported successfully and auditor name saved to the audit record.",
     });
   } catch (error) {
     console.error(error);

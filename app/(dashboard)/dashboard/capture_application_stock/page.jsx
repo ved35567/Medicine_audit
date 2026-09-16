@@ -12,6 +12,7 @@ import {
   Loader2,
   ArrowRight,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { mmuData } from "@/data/mmu.js";
@@ -80,6 +81,7 @@ function CountCard({ label, value, accent = "slate" }) {
 
 export default function ApplicationStockPage() {
   const [selectedMmu, setSelectedMmu] = useState("");
+  const [auditorName, setAuditorName] = useState("");
   const [auditStatus, setAuditStatus] = useState("idle");
   const [auditMessage, setAuditMessage] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
@@ -92,6 +94,7 @@ export default function ApplicationStockPage() {
 
   const todayDate = new Date().toLocaleDateString("en-CA");
   const canUpload = auditStatus === "success";
+  const canImport = canUpload && Boolean(pdfFile) && Boolean(auditorName.trim());
 
   const verifyAudit = async (mmu) => {
     if (!mmu) return;
@@ -224,6 +227,7 @@ export default function ApplicationStockPage() {
       const formData = new FormData();
       formData.append("pdf", pdfFile);
       formData.append("mmu_name", selectedMmu);
+      formData.append("auditor_name", auditorName.trim());
 
       const response = await fetch("/api/application-stock/import", {
         method: "POST",
@@ -311,7 +315,7 @@ export default function ApplicationStockPage() {
                   icon={Building2}
                 />
 
-                <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       MMU Name
@@ -335,6 +339,29 @@ export default function ApplicationStockPage() {
                         className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                      Auditor Name
+                    </label>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={auditorName}
+                        onChange={(event) => setAuditorName(event.target.value)}
+                        placeholder="Enter auditor name"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3.5 pr-12 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      />
+                      <UserRound
+                        size={18}
+                        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      This name is saved with the application stock import.
+                    </p>
                   </div>
 
                   <div>
@@ -505,7 +532,7 @@ export default function ApplicationStockPage() {
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <button
-                    disabled={!pdfFile || loading || !canUpload}
+                    disabled={!canImport || loading}
                     onClick={handleImport}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                   >
@@ -561,6 +588,7 @@ export default function ApplicationStockPage() {
                 <div className="mt-6 space-y-3">
                   <SummaryRow label="MMU" value={selectedMmu || "-"} />
                   <SummaryRow label="Date" value={todayDate} mono />
+                  <SummaryRow label="Auditor" value={auditorName || "-"} />
                   <SummaryRow label="File" value={pdfFile?.name || "-"} />
                   <SummaryRow
                     label="Verification"

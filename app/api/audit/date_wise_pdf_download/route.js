@@ -1039,7 +1039,7 @@ const drawAuditorFooter = (
     y,
     leftWidth,
     16,
-    `Dr. ${audit.auditor_name || ""}`,
+    audit.auditor_name || "",
     {
       align: "center",
       fontSize: 8.5,
@@ -1615,9 +1615,9 @@ export async function GET(
     const pdfBuffer =
       await pdfPromise;
 
-    const filename = `audit_report_${formatDateOnly(
-      selectedDate,
-    )}.pdf`;
+    const safeMmuName = sanitizeFilenamePart(mmuName || "all_mmus");
+    const safeDate = formatDateOnly(selectedDate);
+    const filename = `${safeDate}_${safeMmuName}_Medicine_Audit_Report.pdf`;
 
     return new NextResponse(
       pdfBuffer,
